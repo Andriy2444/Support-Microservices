@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -13,12 +13,45 @@ enum TicketStatus {
   CLOSED
 }
 
+model User {
+  id      Int      @id @default(autoincrement())
+  login   String
+  role    Int      @default(1)
+
+  tickets UserTicket[]
+}
+
 model Ticket {
   id          Int          @id @default(autoincrement())
+  // supportId   Int?
   title       String
   description String
   status      TicketStatus @default(OPEN)
-  userId      Int
-  supId       Int
   createdAt   DateTime     @default(now())
+
+  users       UserTicket[]
+  messages    Message[]
 }
+
+model UserTicket {
+  userId   Int
+  ticketId Int
+  user     User   @relation(fields: [userId], references: [id])
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+
+  @@id([userId, ticketId])
+}
+
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ticketId  Int
+  message   String
+  image     String?
+  createdAt DateTime @default(now())
+
+  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+
