@@ -28,11 +28,8 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
-<<<<<<< HEAD
     "@prisma/client": "^6.16.2",
-=======
     "@nestjs/swagger": "^11.2.3",
->>>>>>> c2ff509776c7c442c91443f972f2784c2ce66560
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1"

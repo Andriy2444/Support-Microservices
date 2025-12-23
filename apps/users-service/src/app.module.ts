@@ -7,7 +7,7 @@ import { PrismaService } from './prisma/prisma.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env', 'apps/users-service/.env'],
+      envFilePath: 'apps/users-service/.env',
       isGlobal: true,
     }),
     UserModule,

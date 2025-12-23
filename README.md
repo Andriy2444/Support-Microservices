@@ -8,23 +8,23 @@
 ```bash
 docker-compose -f docker/docker-compose.yml up --build
 
+npm install
+
 cd .\apps\auth-service
 OR 
 cd .\apps\tickets-service 
 OR
 cd .\apps\users-service
 
-npm install
+npx prisma generate --schema=./prisma/schema.prisma 
+npx prisma db pull --schema=./prisma/schema.prisma
+npx prisma studio #to see and edit db
 
-npx prisma migrate dev
-npx prisma generate
-npx prisma studio
+cd ../../
 
-npm run start:dev auth-service 
+nest start auth-service --watch 
 OR
-npm run start:dev tickets-service
+nest start tickets-service --watch 
 OR
-npm run start:dev users-service
+nest start users-service --watch 
 ```
-
-docker exec -it sts-postgres psql -U admin -d auth_db

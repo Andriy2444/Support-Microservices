@@ -1,54 +1,24 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("TICKETS_DATABASE_URL")
+}
+
+model Ticket {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String
+  status      TicketStatus @default(OPEN)
+  userId      Int
+  createdAt   DateTime     @default(now())
 }
 
 enum TicketStatus {
   OPEN
   IN_PROGRESS
   CLOSED
-}
-
-model User {
-  id    Int    @id @default(autoincrement())
-  login String
-  role  Int    @default(1)
-
-  tickets UserTicket[]
-}
-
-model Ticket {
-  id          Int          @id @default(autoincrement())
-  // supportId   Int?
-  title       String
-  description String
-  status      TicketStatus @default(OPEN)
-  createdAt   DateTime     @default(now())
-
-  users    UserTicket[]
-  messages Message[]
-}
-
-model UserTicket {
-  userId   Int
-  ticketId Int
-  user     User   @relation(fields: [userId], references: [id])
-  ticket   Ticket @relation(fields: [ticketId], references: [id])
-
-  @@id([userId, ticketId])
-}
-
-model Message {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  ticketId  Int
-  message   String
-  image     String?
-  createdAt DateTime @default(now())
-
-  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
