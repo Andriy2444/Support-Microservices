@@ -27,4 +27,7 @@ OR
 nest start tickets-service --watch 
 OR
 nest start users-service --watch 
+
+
+nest start api-gateway --watch
 ```
