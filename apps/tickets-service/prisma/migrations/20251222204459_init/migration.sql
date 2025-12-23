@@ -1,14 +1,13 @@
 -- CreateEnum
-CREATE TYPE "TicketStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'CLOSED');
+CREATE TYPE "public"."TicketStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'CLOSED');
 
 -- CreateTable
-CREATE TABLE "Ticket" (
+CREATE TABLE "public"."Ticket" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "status" "TicketStatus" NOT NULL DEFAULT 'OPEN',
+    "status" "public"."TicketStatus" NOT NULL DEFAULT 'OPEN',
     "userId" INTEGER NOT NULL,
-    "supId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Ticket_pkey" PRIMARY KEY ("id")

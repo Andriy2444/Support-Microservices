@@ -1,19 +1,43 @@
 version: '3.8'
 
 services:
-  postgres:
+  auth-db:
     image: postgres:16
-    container_name: sts-postgres
-    env_file:
-      - .env
+    container_name: auth-db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${AUTH_DB_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./initdb:/docker-entrypoint-initdb.d
+      - auth-db-data:/var/lib/postgresql/data
+
+  users-db:
+    image: postgres:16
+    container_name: users-db
+    environment:
+      POSTGRES_DB: ${USERS_DB_NAME}
+      POSTGRES_USER: ${USERS_DB_USER}
+      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD}
+    ports:
+      - "${USERS_DB_PORT}:5432"
+    volumes:
+      - users-db-data:/var/lib/postgresql/data
+
+  tickets-db:
+    image: postgres:16
+    container_name: tickets-db
+    environment:
+      POSTGRES_DB: ${TICKETS_DB_NAME}
+      POSTGRES_USER: ${TICKETS_DB_USER}
+      POSTGRES_PASSWORD: ${TICKETS_DB_PASSWORD}
+    ports:
+      - "${TICKETS_DB_PORT}:5432"
+    volumes:
+      - tickets-db-data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  auth-db-data:
+  users-db-data:
+  tickets-db-data:

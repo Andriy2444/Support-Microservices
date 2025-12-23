@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: 'apps/auth-service/.env',
+      envFilePath: '.env',
       isGlobal: true,
     }),
   ],

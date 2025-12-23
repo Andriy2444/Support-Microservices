@@ -8,19 +8,17 @@
 ```bash
 docker-compose -f docker/docker-compose.yml up --build
 
-npm install
-
 cd .\apps\auth-service
 OR 
 cd .\apps\tickets-service 
 OR
 cd .\apps\users-service
 
-npx prisma migrate dev --name init --config=prisma/prisma.config.ts
-npx prisma generate --config=prisma/prisma.config.ts
-npx prisma studio --config=prisma/prisma.config.ts
+npm install
 
-cd ../..
+npx prisma migrate dev
+npx prisma generate
+npx prisma studio
 
 npm run start:dev auth-service 
 OR
@@ -28,3 +26,5 @@ npm run start:dev tickets-service
 OR
 npm run start:dev users-service
 ```
+
+docker exec -it sts-postgres psql -U admin -d auth_db

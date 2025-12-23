@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum TicketStatus {
@@ -19,6 +19,5 @@ model Ticket {
   description String
   status      TicketStatus @default(OPEN)
   userId      Int
-  supId       Int
   createdAt   DateTime     @default(now())
 }
