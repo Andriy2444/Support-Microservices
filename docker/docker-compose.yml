@@ -12,6 +12,11 @@ services:
       - "${AUTH_DB_PORT}:5432"
     volumes:
       - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   users-db:
     image: postgres:16
@@ -24,6 +29,11 @@ services:
       - "${USERS_DB_PORT}:5432"
     volumes:
       - users-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${USERS_DB_USER} -d ${USERS_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   tickets-db:
     image: postgres:16
@@ -36,6 +46,63 @@ services:
       - "${TICKETS_DB_PORT}:5432"
     volumes:
       - tickets-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TICKETS_DB_USER} -d ${TICKETS_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: apps/auth-service/Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    env_file:
+      - .env
+    environment:
+      AUTH_DATABASE_URL: postgresql://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+      PORT: ${AUTH_SV_PORT}
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    ports:
+      - "${AUTH_SV_PORT}:${AUTH_SV_PORT}"
+
+  tickets-service:
+    build:
+      context: ..
+      dockerfile: apps/tickets-service/Dockerfile
+      args:
+        SERVICE_NAME: tickets-service
+    env_file:
+      - .env
+    environment:
+      TICKETS_DATABASE_URL: postgresql://${TICKETS_DB_USER}:${TICKETS_DB_PASSWORD}@tickets-db:5432/${TICKETS_DB_NAME}
+      PORT: ${TICKETS_SV_PORT}
+    depends_on:
+      tickets-db:
+        condition: service_healthy
+    ports:
+      - "${TICKETS_SV_PORT}:${TICKETS_SV_PORT}"
+
+  users-service:
+    build:
+      context: ..
+      dockerfile: apps/users-service/Dockerfile
+      args:
+        SERVICE_NAME: users-service
+    env_file:
+      - .env
+    environment:
+      USERS_DATABASE_URL: postgresql://${USERS_DB_USER}:${USERS_DB_PASSWORD}@users-db:5432/${USERS_DB_NAME}
+      PORT: ${USERS_SV_PORT}
+    depends_on:
+      users-db:
+        condition: service_healthy
+    ports:
+      - "${USERS_SV_PORT}:${USERS_SV_PORT}"
+
 
 volumes:
   auth-db-data:

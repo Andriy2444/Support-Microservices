@@ -6,6 +6,7 @@
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
 ```bash
+
 docker-compose -f docker/docker-compose.yml up --build
 
 npm install
@@ -30,4 +31,22 @@ nest start users-service --watch
 
 
 nest start api-gateway --watch
+```
+For docker
+```bash
+
+npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
+npx prisma generate --schema=apps/users-service/prisma/schema.prisma
+npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma
+
+cd docker
+docker-compose up --build
+
+docker logs docker-auth-service-1
+docker logs docker-users-service-1
+docker logs docker-tickets-service-1
+
+cd ../
+nest start api-gateway --watch
+
 ```
