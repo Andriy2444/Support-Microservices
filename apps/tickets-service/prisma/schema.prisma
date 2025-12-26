@@ -9,13 +9,40 @@ datasource db {
   url      = env("TICKETS_DATABASE_URL")
 }
 
+model User {
+  id      Int          @id @default(autoincrement())
+  login   String
+  role    Int          @default(1)
+  tickets UserTicket[]
+}
+
 model Ticket {
   id          Int          @id @default(autoincrement())
   title       String
   description String
   status      TicketStatus @default(OPEN)
-  userId      Int
   createdAt   DateTime     @default(now())
+  messages    Message[]
+  users       UserTicket[]
+}
+
+model UserTicket {
+  userId   Int
+  ticketId Int
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, ticketId])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  ticketId  Int
+  message   String
+  image     String?
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
 
 enum TicketStatus {
