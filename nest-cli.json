@@ -9,6 +9,9 @@
     "webpack": true,
     "tsConfigPath": "tsconfig.json"
   },
+  "watchOptions": {
+    "poll": 3000
+  },
   "projects": {
     "api-gateway": {
       "type": "application",
