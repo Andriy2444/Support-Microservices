@@ -111,4 +111,12 @@ export class TicketsService {
     });
   }
 
+  async getMessageById(messageId: number) {
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+    });
+    if (!message) throw new NotFoundException('Message not found');
+    return message;
+  }
+
 }

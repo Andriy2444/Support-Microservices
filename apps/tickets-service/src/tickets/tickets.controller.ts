@@ -1,12 +1,13 @@
 import { Body, Controller, Get, Post, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { IsString, IsInt, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
-import {
-  ApiOperation,
-  ApiTags,
-  ApiResponse,
-  ApiProperty,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiResponse, ApiProperty } from '@nestjs/swagger';
+
+enum TicketStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  CLOSED = 'CLOSED',
+}
 
 class CreateTicketDto {
   @ApiProperty({ example: 'Проблема з доступом' })
@@ -19,33 +20,24 @@ class CreateTicketDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: 1, description: 'ID користувача' })
+  @ApiProperty({ example: 1 })
   @IsInt()
   userId: number;
 }
 
 class UpdateTicketDto {
-  // @ApiProperty({ example: 'Оновлена назва', required: false })
-  // @IsString()
-  // @IsOptional()
-  // title?: string;
-
-  // @ApiProperty({ example: 'Оновлений опис', required: false })
-  // @IsString()
-  // @IsOptional()
-  // description?: string;
-
-  @ApiProperty({ example: 'CLOSED', enum: ['OPEN', 'IN_PROGRESS', 'CLOSED'], required: false })
+  @ApiProperty({ example: 'CLOSED', enum: TicketStatus, required: false })
+  @IsEnum(TicketStatus)
   @IsOptional()
-  status?: any;
+  status?: TicketStatus;
 }
 
 class CreateMessageDto {
-  @ApiProperty({ example: 1, description: 'User Id' })
+  @ApiProperty({ example: 1 })
   @IsInt()
   userId: number;
 
-  @ApiProperty({ example: 'Пр, чо ніц не паше йоу', description: 'Message text' })
+  @ApiProperty({ example: 'Текст повідомлення' })
   @IsString()
   @IsNotEmpty()
   message: string;
@@ -63,28 +55,24 @@ export class TicketsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all tickets' })
-  @ApiResponse({ status: 200, description: 'Return all tickets' })
   async getAllTickets() {
     return this.ticketService.getAllTickets();
   }
 
-  @Get(':userId')
+  @Get('user/:userId')
   @ApiOperation({ summary: 'Get user tickets' })
-  @ApiResponse({ status: 200, description: 'Return user tickets' })
   async getTickets(@Param('userId', ParseIntPipe) userId: number) {
     return this.ticketService.getTickets(userId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new ticket' })
-  @ApiResponse({ status: 201, description: 'The ticket has been successfully created' })
   async createTicket(@Body() createTicketDto: CreateTicketDto) {
     return this.ticketService.createTicket(createTicketDto);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update ticket' })
-  @ApiResponse({ status: 200, description: 'Ticket updated' })
   async patchTicket(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTicketDto: UpdateTicketDto
@@ -94,7 +82,6 @@ export class TicketsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete ticket' })
-  @ApiResponse({ status: 200, description: 'Ticket deleted' })
   async deleteTicket(@Param('id', ParseIntPipe) id: number) {
     return this.ticketService.deleteTicket(id);
   }
@@ -110,7 +97,6 @@ export class TicketsController {
 
   @Post(':ticketId/messages')
   @ApiOperation({ summary: 'Send Message' })
-  @ApiResponse({ status: 201, description: 'Message sent' })
   async createMessage(
     @Param('ticketId', ParseIntPipe) ticketId: number,
     @Body() createMessageDto: CreateMessageDto,
@@ -118,10 +104,15 @@ export class TicketsController {
     return this.ticketService.addMessage(ticketId, createMessageDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all ticket messages' })
-  async getMessages(@Param('ticketId', ParseIntPipe) ticketId: number) {
+  @Get(':ticketId/messages')
+  @ApiOperation({ summary: 'Get ticket messages' })
+  async getTicketMessages(@Param('ticketId', ParseIntPipe) ticketId: number) {
     return this.ticketService.getTicketMessages(ticketId);
   }
-  
+
+  @Get('messages/:messageId')
+  @ApiOperation({ summary: 'Get message by id' })
+  async getMessageById(@Param('messageId', ParseIntPipe) messageId: number) {
+    return this.ticketService.getMessageById(messageId);
+  }
 }
