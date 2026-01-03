@@ -51,3 +51,12 @@ jobs:
 
           cd docker
           docker compose build
+
+          - name: Build and Test
+          run: |
+            cd docker
+            docker compose build
+            docker compose up -d
+            sleep 10
+            docker compose exec -T tickets-service npm run test
+            docker compose down
