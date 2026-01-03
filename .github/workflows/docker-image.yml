@@ -20,16 +20,19 @@ jobs:
             AUTH_DB_USER: ${{ secrets.AUTH_DB_USER }}
             AUTH_DB_PASSWORD: ${{ secrets.AUTH_DB_PASSWORD }}
             AUTH_DB_PORT: ${{ secrets.AUTH_DB_PORT }}
+            AUTH_SV_PORT: ${{ secrets.AUTH_SV_PORT }}
 
             USERS_DB_NAME: ${{ secrets.USERS_DB_NAM }}
             USERS_DB_USER: ${{ secrets.USERS_DB_USER }}
             USERS_DB_PASSWORD: ${{ secrets.USERS_DB_PASSWORD }}
             USERS_DB_PORT: ${{ secrets.USERS_DB_PORT }}
+            USERS_SV_PORT: ${{ secrets.USERS_SV_PORT }}
 
             TICKETS_DB_NAME: ${{ secrets.TICKETS_DB_NAM }}
             TICKETS_DB_USER: ${{ secrets.TICKETS_DB_USER }}
             TICKETS_DB_PASSWORD: ${{ secrets.TICKETS_DB_PASSWORD }}
             TICKETS_DB_PORT: ${{ secrets.TICKETS_DB_PORT }}
+            TICKETS_SV_PORT: ${{ secrets.TICKETS_SV_PORT }}
         run: |
           cd docker 
           docker compose build
