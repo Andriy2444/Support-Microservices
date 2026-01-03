@@ -14,10 +14,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create All Env Files
+      - name: Prepare and Build
         run: |
-          cd docker
-          cat <<EOF > .env
+          cat <<EOF > docker/.env
           AUTH_SV_PORT=${{ secrets.AUTH_SV_PORT }}
           USERS_SV_PORT=${{ secrets.USERS_SV_PORT }}
           TICKETS_SV_PORT=${{ secrets.TICKETS_SV_PORT }}
@@ -34,24 +33,21 @@ jobs:
           TICKETS_DB_PASSWORD=${{ secrets.TICKETS_DB_PASSWORD }}
           TICKETS_DB_PORT=${{ secrets.TICKETS_DB_PORT }}
           EOF
-          cd ..
 
           cat <<EOF > apps/auth-service/.env
           PORT=3001
-          AUTH_DATABASE_URL=postgresql://${{ secrets.AUTH_DB_USER }}:${{ secrets.AUTH_DB_PASSWORD }}@auth-db:5433/${{ secrets.AUTH_DB_NAME }}
+          AUTH_DATABASE_URL=postgresql://${{ secrets.AUTH_DB_USER }}:${{ secrets.AUTH_DB_PASSWORD }}@auth-db:5432/${{ secrets.AUTH_DB_NAME }}
           EOF
 
           cat <<EOF > apps/users-service/.env
           PORT=3002
-          USERS_DATABASE_URL=postgresql://${{ secrets.USERS_DB_USER }}:${{ secrets.USERS_DB_PASSWORD }}@users-db:5434/${{ secrets.USERS_DB_NAME }}
+          USERS_DATABASE_URL=postgresql://${{ secrets.USERS_DB_USER }}:${{ secrets.USERS_DB_PASSWORD }}@users-db:5432/${{ secrets.USERS_DB_NAME }}
           EOF
 
           cat <<EOF > apps/tickets-service/.env
           PORT=3003
-          TICKETS_DATABASE_URL=postgresql://${{ secrets.TICKETS_DB_USER }}:${{ secrets.TICKETS_DB_PASSWORD }}@tickets-db:5435/${{ secrets.TICKETS_DB_NAME }}
+          TICKETS_DATABASE_URL=postgresql://${{ secrets.TICKETS_DB_USER }}:${{ secrets.TICKETS_DB_PASSWORD }}@tickets-db:5432/${{ secrets.TICKETS_DB_NAME }}
           EOF
 
-      - name: Build with Docker Compose
-        run: |
           cd docker
           docker compose build
