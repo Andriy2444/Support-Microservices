@@ -18,6 +18,8 @@ OR
 cd .\apps\users-service
 
 npx prisma generate --schema=./prisma/schema.prisma 
+npx prisma db push --schema=./prisma/schema.prisma
+
 npx prisma db pull --schema=./prisma/schema.prisma
 npx prisma studio #to see and edit db
 

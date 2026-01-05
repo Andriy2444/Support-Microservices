@@ -14,4 +14,9 @@ model Auth {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+  verifed   Boolean  @default(false)
+}
+
+model kaka {
+  id Int @id @default(autoincrement())
 }
