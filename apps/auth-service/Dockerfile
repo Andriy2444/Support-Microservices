@@ -36,4 +36,4 @@ COPY --from=builder /app/apps/${SERVICE_NAME}/prisma ./apps/${SERVICE_NAME}/pris
 
 RUN npx prisma generate --schema=apps/${SERVICE_NAME}/prisma/schema.prisma
 
-CMD npx prisma db push --schema=apps/${SERVICE_NAME}/prisma/schema.prisma && node dist/main.js
+CMD sh -c "npx prisma db push --schema=apps/${SERVICE_NAME}/prisma/schema.prisma && node dist/main.js"

@@ -10,10 +10,9 @@ datasource db {
 }
 
 model User {
-  id      Int          @id @default(autoincrement())
-  login   String
-  role    Int          @default(1)
-  tickets UserTicket[]
+  id    Int    @id @default(autoincrement())
+  login String
+  role  Int    @default(1)
 }
 
 model Ticket {
@@ -30,7 +29,6 @@ model UserTicket {
   userId   Int
   ticketId Int
   ticket   Ticket @relation(fields: [ticketId], references: [id])
-  user     User   @relation(fields: [userId], references: [id])
 
   @@id([userId, ticketId])
 }
