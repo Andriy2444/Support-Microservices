@@ -16,8 +16,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
+      - name: Generate Prisma Clients
+        run: |
+          npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
+          npx prisma generate --schema=apps/users-service/prisma/schema.prisma
+          npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma
 
       - name: Run Lint
         run: npm run lint
