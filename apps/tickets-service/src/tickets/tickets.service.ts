@@ -7,10 +7,10 @@ export class TicketsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAllTickets() {
-    return this.prisma.ticket.findMany();
+    return await this.prisma.ticket.findMany();
   }
 
-  async getTickets( userId: number) {
+  async getTickets(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { role: true },
@@ -27,11 +27,10 @@ export class TicketsService {
       whereClause.users = {
         some: { userId: userId },
       };
-
     } else if (roleId === 2) {
       whereClause = {
         OR: [
-          { status: 'OPEN' }, 
+          { status: 'OPEN' },
           {
             AND: [
               { users: { some: { userId } } },
@@ -40,10 +39,9 @@ export class TicketsService {
           },
         ],
       };
+    }
 
-    } else if (roleId === 3) {}
-
-    return this.prisma.ticket.findMany({
+    return await this.prisma.ticket.findMany({
       where: whereClause,
       include: {
         users: true,
@@ -52,7 +50,7 @@ export class TicketsService {
   }
 
   async createTicket(data: { title: string; description: string; userId: number }) {
-    return this.prisma.ticket.create({
+    return await this.prisma.ticket.create({
       data: {
         title: data.title,
         description: data.description,
@@ -67,20 +65,20 @@ export class TicketsService {
   }
 
   async patchTicket(id: number, data: Prisma.TicketUpdateInput) {
-    return this.prisma.ticket.update({
+    return await this.prisma.ticket.update({
       where: { id },
       data,
     });
   }
 
   async deleteTicket(id: number) {
-    return this.prisma.ticket.delete({
+    return await this.prisma.ticket.delete({
       where: { id },
     });
   }
 
   async addUserToTicket(ticketId: number, userId: number) {
-    return this.prisma.ticket.update({
+    return await this.prisma.ticket.update({
       where: { id: ticketId },
       data: {
         users: {
@@ -89,12 +87,12 @@ export class TicketsService {
           },
         },
       },
-      include: { users: true }
+      include: { users: true },
     });
   }
 
-  async addMessage(ticketId: number, data: any) {
-    return this.prisma.message.create({
+  async addMessage(ticketId: number, data: { message: string; image?: string; userId: number }) {
+    return await this.prisma.message.create({
       data: {
         message: data.message,
         image: data.image,
@@ -105,7 +103,7 @@ export class TicketsService {
   }
 
   async getTicketMessages(ticketId: number) {
-    return this.prisma.message.findMany({
+    return await this.prisma.message.findMany({
       where: { ticketId },
       orderBy: { createdAt: 'asc' },
     });
@@ -118,5 +116,4 @@ export class TicketsService {
     if (!message) throw new NotFoundException('Message not found');
     return message;
   }
-
 }
