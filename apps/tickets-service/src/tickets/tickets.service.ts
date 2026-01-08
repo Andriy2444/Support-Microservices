@@ -24,8 +24,10 @@ export class TicketsService {
     let whereClause: Prisma.TicketWhereInput = {};
 
     if (roleId === 1) {
-      whereClause.users = {
-        some: { userId: userId },
+      whereClause = {
+        users: {
+          some: { userId: userId },
+        },
       };
     } else if (roleId === 2) {
       whereClause = {
@@ -39,6 +41,8 @@ export class TicketsService {
           },
         ],
       };
+    } else if (roleId === 3) {
+      whereClause = {};
     }
 
     return await this.prisma.ticket.findMany({
@@ -113,7 +117,9 @@ export class TicketsService {
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
     });
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
     return message;
   }
 }
