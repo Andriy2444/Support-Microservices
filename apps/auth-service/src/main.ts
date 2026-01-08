@@ -21,7 +21,7 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log("Atrem lox");
+  console.log("Artem krasavchik");
   console.log(
     `🚀🤤🤫 Service Auth running on 👉 http://localhost:${port} 👈 🤫🤤🚀`,
   );
