@@ -6,12 +6,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from './mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private mailService: MailService,
   ) {}
 
   // ================= REGISTER =================
@@ -41,6 +43,7 @@ export class AuthService {
       { expiresIn: '15m' },
     );
 
+    await this.mailService.sendVerifyEmail(email, verifyToken);
     
     return {
       message: 'Registered successfully',
