@@ -11,6 +11,7 @@ async function bootstrap() {
      .setTitle('Ticket Service')
      .setVersion("1.0.0")
      .setBasePath('tickets')
+     .addBearerAuth()
      .build()
 
   const document = SwaggerModule.createDocument(app, config);

@@ -40,15 +40,15 @@ describe('TicketsService', () => {
   describe('getTickets logic by Roles', () => {
     it('should throw NotFoundException if user does not exist', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
-      await expect(service.getTickets(999)).rejects.toThrow(NotFoundException);
+      await expect(service.getTickets(999, 'ADMIN')).rejects.toThrow(NotFoundException);
     });
 
     it('should return tickets for Role 1 (User)', async () => {
-      const userId = 1;
+      const userId = 999;
       mockPrismaService.user.findUnique.mockResolvedValue({ id: userId, role: 1 });
       mockPrismaService.ticket.findMany.mockResolvedValue([{ id: 101 }]);
 
-      const result = await service.getTickets(userId);
+      const result = await service.getTickets(userId, 'ADMIN');
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -62,7 +62,7 @@ describe('TicketsService', () => {
       const userId = 2;
       mockPrismaService.user.findUnique.mockResolvedValue({ id: userId, role: 2 });
       
-      await service.getTickets(userId);
+      await service.getTickets(userId, 'ADMIN');
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
