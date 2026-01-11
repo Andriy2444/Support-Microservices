@@ -2,11 +2,13 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  Inject,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from './mail.service';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -14,42 +16,51 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private mailService: MailService,
+
+    @Inject('USER_SERVICE')
+    private readonly userClient: ClientProxy,
   ) {}
 
   // ================= REGISTER =================
-  async register(email: string, password: string) {
-    const exists = await this.prisma.auth.findUnique({
-      where: { email },
-    });
+async register(email: string, password: string) {
+  // 1️⃣ перевірка
+  const exists = await this.prisma.auth.findUnique({
+    where: { email },
+  });
 
-    if (exists) {
-      throw new BadRequestException('User already exists');
-    }
-
-    const hash = await bcrypt.hash(password, 10);
-
-    const user = await this.prisma.auth.create({
-      data: {
-        email,
-        password: hash,
-      },
-    });
-
-    const verifyToken = this.jwt.sign(
-      {
-        sub: user.id,
-        type: 'verify',
-      },
-      { expiresIn: '15m' },
-    );
-
-    await this.mailService.sendVerifyEmail(email, verifyToken);
-    
-    return {
-      message: 'Registered successfully',
-      verifyToken,
-    };
+  if (exists) {
+    throw new BadRequestException('User already exists');
   }
+
+  const hash = await bcrypt.hash(password, 10);
+
+  const user = await this.prisma.auth.create({
+    data: {
+      email,
+      password: hash,
+    },
+  });
+
+  const verifyToken = this.jwt.sign(
+    {
+      sub: user.id,
+      type: 'verify',
+    },
+    { expiresIn: '15m' },
+  );
+
+  await this.mailService.sendVerifyEmail(email, verifyToken);
+
+    this.userClient.emit('auth.user.created', {
+    authUserId: user.id,
+    email: user.email,
+    version: 1,
+  });
+
+  return {
+    message: 'Registered successfully',
+  };
+}
 
   // ================= LOGIN =================
   async login(email: string, password: string) {
@@ -66,7 +77,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!user.verifed) {
+    if (!user.isVerified) {
       throw new UnauthorizedException('Email not verified');
     }
 
@@ -92,7 +103,7 @@ export class AuthService {
 
     await this.prisma.auth.update({
       where: { id: payload.sub },
-      data: { verifed: true },
+      data: { isVerified: true },
     });
 
     return { message: 'Account verified' };

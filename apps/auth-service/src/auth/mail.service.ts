@@ -14,7 +14,7 @@ export class MailService {
   });
 
   async sendVerifyEmail(email: string, token: string) {
-    const link = `http://localhost:3000/auth/verify?token=${token}`;
+    const link = `http://localhost:3001/auth/verify?token=${token}`;
 
     await this.transporter.sendMail({
       from: `"Auth App" <${process.env.MAIL_USER}>`,

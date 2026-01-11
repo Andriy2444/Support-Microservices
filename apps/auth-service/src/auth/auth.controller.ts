@@ -1,6 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -20,9 +20,9 @@ export class AuthController {
     return this.authService.login(dto.email, dto.password);
   }
 
-  @Post('verify')
+  @Get('verify')
   @ApiOperation({ summary: 'Verify JWT token' })
-  verify(@Body('token') token: string) {
+  verify(@Query('token') token: string) {
     return this.authService.verify(token);
   }
 }
