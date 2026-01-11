@@ -44,12 +44,13 @@ export class UserService {
     });
   }
 
-  async create(createUserDto: CreateUserDto) {
+  async create(data: CreateUserDto & { authUserId?: number }) {
     return this.prisma.user.create({
       data: {
-        email: createUserDto.email,
-        name: createUserDto.name,
-        role: createUserDto.role || 'USER',
+        email: data.email,
+        name: data.name ?? '',
+        role: (data.role as any) || 'USER',
+        authUserId: data.authUserId ?? 0,
       },
       select: {
         id: true,

@@ -15,27 +15,23 @@ import {
   ExecutionContext
 } from '@nestjs/common';
 import { UserService } from './users.service';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiOperation, ApiTags, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserRole } from '../generated/client';
 import { Reflector } from '@nestjs/core';
-
-// Локальні гарди для users мікросервісу - ВІДПОВІДАЄ ПРИЗМА СХЕМІ
-export enum ControllerUserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  SUPPORT = 'SUPPORT'  // замість MODERATOR
-}
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 export const ROLES_KEY = 'roles';
-export const Roles = (...roles: ControllerUserRole[]) => SetMetadata(ROLES_KEY, roles);
+export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<ControllerUserRole[]>(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -62,24 +58,30 @@ export class RolesGuard implements CanActivate {
   }
 }
 
-@Injectable()
-export class JwtAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    // Проста перевірка - припускаємо, що JWT вже провалідовано API Gateway або middleware
-    // і користувач доданий до запиту
-    return !!request.user?.userId;
-  }
-}
-
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @EventPattern('auth.user.created')
+  async handleUserCreated(@Payload() data: { authUserId: number; email: string }) {
+    console.log('RabbitMQ Event: Creating user profile for', data.email);
+
+    try {
+      return await this.userService.create({
+        email: data.email,
+        authUserId: data.authUserId,
+        name: '', // Початкове порожнє ім'я
+        role: UserRole.USER as any,
+      });
+    } catch (error) {
+      console.error('Error creating user from event:', error.message);
+    }
+  }
+
   @Get('profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Return current user profile' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -88,6 +90,7 @@ export class UserController {
   }
 
   @Patch('profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -101,7 +104,8 @@ export class UserController {
   }
 
   @Post()
-  @Roles(ControllerUserRole.ADMIN)  // Використовуємо ControllerUserRole
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new user (Admin only)' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
@@ -110,7 +114,8 @@ export class UserController {
   }
 
   @Get()
-  @Roles(ControllerUserRole.ADMIN, ControllerUserRole.SUPPORT)  // SUPPORT замість MODERATOR
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   @ApiOperation({ summary: 'Get all users (Admin/Support only)' })
   @ApiResponse({ status: 200, description: 'Return all users' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -119,7 +124,8 @@ export class UserController {
   }
 
   @Get(':id')
-  @Roles(ControllerUserRole.ADMIN, ControllerUserRole.SUPPORT)  // SUPPORT замість MODERATOR
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPPORT)
   @ApiOperation({ summary: 'Get user by ID (Admin/Support only)' })
   @ApiParam({ name: 'id', type: Number, description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Return user by ID' })

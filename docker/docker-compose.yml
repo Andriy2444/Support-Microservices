@@ -53,6 +53,18 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # --- MICROSERVICES ---
 
   auth-service:
@@ -73,6 +85,8 @@ services:
       WATCHPACK_POLLING: "true"
     depends_on:
       auth-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "${AUTH_SV_PORT}:${AUTH_SV_PORT}"
@@ -104,6 +118,8 @@ services:
     depends_on:
       tickets-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "${TICKETS_SV_PORT}:${TICKETS_SV_PORT}"
     volumes:
@@ -133,6 +149,8 @@ services:
     depends_on:
       users-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "${USERS_SV_PORT}:${USERS_SV_PORT}"
     volumes:
@@ -142,7 +160,7 @@ services:
     command: >
       sh -c "npx prisma generate --schema=apps/users-service/prisma/schema.prisma && 
              npx prisma db push --schema=apps/users-service/prisma/schema.prisma && 
-             npm run start:dev users-service -- --watch --poll 1000"
+             npm run start:dev users-service -- --watch --poll 1000"  
 
 volumes:
   auth-db-data:
