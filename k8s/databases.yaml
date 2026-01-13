@@ -17,17 +17,26 @@ spec:
         image: postgres:16
         env:
         - name: POSTGRES_DB
-          value: "auth_db"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: AUTH_DB_NAME
         - name: POSTGRES_USER
-          value: "auth"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: AUTH_DB_USER
         - name: POSTGRES_PASSWORD
-          value: "auth"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: AUTH_DB_PASSWORD
         ports:
         - containerPort: 5432
         livenessProbe:
           exec:
             command: ["pg_isready", "-U", "auth"]
-          initialDelaySeconds: 10
+          initialDelaySeconds: 15
 ---
 apiVersion: v1
 kind: Service
@@ -39,10 +48,10 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
-      nodePort: 30433 # Зовнішній доступ як ваші дані (5433)
-  type: NodePort
+  type: ClusterIP
 
 ---
+
 # --- USERS DATABASE ---
 apiVersion: apps/v1
 kind: Deployment
@@ -62,17 +71,26 @@ spec:
         image: postgres:16
         env:
         - name: POSTGRES_DB
-          value: "users_db"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: USERS_DB_NAME
         - name: POSTGRES_USER
-          value: "users"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: USERS_DB_USER
         - name: POSTGRES_PASSWORD
-          value: "users"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: USERS_DB_PASSWORD
         ports:
         - containerPort: 5432
         livenessProbe:
           exec:
             command: ["pg_isready", "-U", "users"]
-          initialDelaySeconds: 10
+          initialDelaySeconds: 15
 ---
 apiVersion: v1
 kind: Service
@@ -84,10 +102,10 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
-      nodePort: 30434 # Зовнішній доступ (5434)
-  type: NodePort
+  type: ClusterIP
 
 ---
+
 # --- TICKETS DATABASE ---
 apiVersion: apps/v1
 kind: Deployment
@@ -107,17 +125,26 @@ spec:
         image: postgres:16
         env:
         - name: POSTGRES_DB
-          value: "tickets_db"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: TICKETS_DB_NAME
         - name: POSTGRES_USER
-          value: "tickets"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: TICKETS_DB_USER
         - name: POSTGRES_PASSWORD
-          value: "tickets"
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: TICKETS_DB_PASSWORD
         ports:
         - containerPort: 5432
         livenessProbe:
           exec:
             command: ["pg_isready", "-U", "tickets"]
-          initialDelaySeconds: 10
+          initialDelaySeconds: 15
 ---
 apiVersion: v1
 kind: Service
@@ -129,5 +156,4 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
-      nodePort: 30435 # Зовнішній доступ (5435)
-  type: NodePort
+  type: ClusterIP

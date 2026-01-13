@@ -55,4 +55,21 @@ nest start api-gateway --watch
 Swagger Documentation are running from http://localhost:3000/docs
 
 ## K8s Setup
-soon
+1. **Build docker**
+```bash
+docker build -t docker-auth-service:latest . --build-arg SERVICE_NAME=auth-service -f apps/auth-service/Dockerfile
+docker build -t docker-users-service:latest . --build-arg SERVICE_NAME=users-service -f apps/users-service/Dockerfile
+docker build -t docker-tickets-service:latest . --build-arg SERVICE_NAME=tickets-service -f apps/tickets-service/Dockerfile
+docker build -t docker-api-gateway:latest . --build-arg SERVICE_NAME=api-gateway -f apps/api-gateway/Dockerfile
+```
+
+2. **Apply k8s**
+```bash
+kubectl apply -f k8s/
+```
+
+3. **Check**
+```bash
+kubectl get pods
+kubectl get svc
+```

@@ -6,7 +6,7 @@ RUN npm install
 
 COPY nest-cli.json ./
 COPY tsconfig*.json ./
-COPY . .
+COPY apps/api-gateway ./apps/api-gateway
 
 RUN npm run build api-gateway
 

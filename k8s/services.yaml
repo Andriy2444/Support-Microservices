@@ -13,26 +13,60 @@ spec:
       labels:
         app: auth-service
     spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.28
+          command: [ 'sh', '-c', "until nc -zv auth-db-service 5432; do echo 'Waiting for database...'; sleep 2; done;" ]
       containers:
-      - name: auth-service
-        image: docker-auth-service:latest
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: AUTH_DATABASE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: AUTH_DATABASE_URL
-        - name: PORT
-          value: "3001"
-        command: ["sh", "-c"]
-        args: ["npx prisma generate --schema=apps/auth-service/prisma/schema.prisma && npx prisma db push --schema=apps/auth-service/prisma/schema.prisma && node dist/apps/auth-service/main.js"]
-
-        ports:
-        - containerPort: 3001
+        - name: auth-service
+          image: docker-auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          env:
+            - name: AUTH_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AUTH_DATABASE_URL
+            - name: PORT
+              value: "3001"
+          command: ["sh", "-c"]
+          args:
+            - >
+              npx prisma generate --schema=apps/auth-service/prisma/schema.prisma &&
+              npx prisma db push --schema=apps/auth-service/prisma/schema.prisma &&
+              node dist/apps/auth-service/main.js
+          livenessProbe:
+            httpGet: { path: /health, port: 3001 }
+            initialDelaySeconds: 60  # Збільшено
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /health, port: 3001 }
+            initialDelaySeconds: 40  # Збільшено
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"        # Збільшено
+            limits:
+              cpu: "500m"
+              memory: "512Mi"        # Збільшено критично
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 3001
+      targetPort: 3001
+  type: ClusterIP
 
+---
 # --- USERS SERVICE ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,25 +82,58 @@ spec:
       labels:
         app: users-service
     spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.28
+          command: [ 'sh', '-c', "until nc -zv users-db-service 5432; do echo 'Waiting for database...'; sleep 2; done;" ]
       containers:
-      - name: users-service
-        image: docker-users-service:latest
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: USERS_DATABASE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: USERS_DATABASE_URL
-        - name: PORT
-          value: "3002"
-        command: ["sh", "-c"]
-        args: ["npx prisma generate --schema=apps/users-service/prisma/schema.prisma && npx prisma db push --schema=apps/users-service/prisma/schema.prisma && node dist/apps/users-service/main.js"]
-        ports:
-        - containerPort: 3002
+        - name: users-service
+          image: docker-users-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3002
+          env:
+            - name: USERS_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: USERS_DATABASE_URL
+            - name: PORT
+              value: "3002"
+          command: ["sh", "-c"]
+          args:
+            - >
+              npx prisma generate --schema=apps/users-service/prisma/schema.prisma &&
+              npx prisma db push --schema=apps/users-service/prisma/schema.prisma &&
+              node dist/apps/users-service/main.js
+          livenessProbe:
+            httpGet: { path: /health, port: 3002 }
+            initialDelaySeconds: 60
+          readinessProbe:
+            httpGet: { path: /health, port: 3002 }
+            initialDelaySeconds: 40
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-service
+spec:
+  selector:
+    app: users-service
+  ports:
+    - port: 3002
+      targetPort: 3002
+  type: ClusterIP
 
+---
 # --- TICKETS SERVICE ---
 apiVersion: apps/v1
 kind: Deployment
@@ -82,19 +149,53 @@ spec:
       labels:
         app: tickets-service
     spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.28
+          command: [ 'sh', '-c', "until nc -zv tickets-db-service 5432; do echo 'Waiting for database...'; sleep 2; done;" ]
       containers:
-      - name: tickets-service
-        image: docker-tickets-service:latest
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: TICKETS_DATABASE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: TICKETS_DATABASE_URL
-        - name: PORT
-          value: "3003"
-        command: ["sh", "-c"]
-        args: ["npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma && npx prisma db push --schema=apps/tickets-service/prisma/schema.prisma && node dist/apps/tickets-service/main.js"]
-        ports:
-        - containerPort: 3003
+        - name: tickets-service
+          image: docker-tickets-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3003
+          env:
+            - name: TICKETS_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: TICKETS_DATABASE_URL
+            - name: PORT
+              value: "3003"
+          command: ["sh", "-c"]
+          args:
+            - >
+              npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma &&
+              npx prisma db push --schema=apps/tickets-service/prisma/schema.prisma &&
+              node dist/apps/tickets-service/main.js
+          livenessProbe:
+            httpGet: { path: /health, port: 3003 }
+            initialDelaySeconds: 60
+          readinessProbe:
+            httpGet: { path: /health, port: 3003 }
+            initialDelaySeconds: 40
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tickets-service
+spec:
+  selector:
+    app: tickets-service
+  ports:
+    - port: 3003
+      targetPort: 3003
+  type: ClusterIP

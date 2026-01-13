@@ -6,4 +6,13 @@ export class AppController {
   getHello(): string {
     return 'Hello from Auth Service!';
   }
+
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'auth-service',
+      timestamp: new Date().toISOString()
+    };
+  }
 }
