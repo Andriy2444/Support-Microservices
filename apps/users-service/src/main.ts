@@ -23,11 +23,12 @@ async function bootstrap() {
     .setTitle('User Service API')
     .setDescription('API для управління користувачами')
     .setVersion('1.0')
-    .addBearerAuth() // Додаємо авторизацію в Swagger
+    .addBearerAuth()
+    .addServer('/users')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document); // Змінив з 'docs' на 'api-docs'
+  SwaggerModule.setup('api-docs', app, document);
 
   app.getHttpAdapter().get('/docs-json', (req, res) => {
     res.json(document);
@@ -36,7 +37,6 @@ async function bootstrap() {
   await app.startAllMicroservices();
   await app.listen(port);
   console.log(`🚀 Service User running on 👉 http://localhost:${port} 👈`);
-  console.log(`📚 Swagger docs: http://localhost:${port}/api-docs`);
   console.log(`🩺 Health check: http://localhost:${port}/health`);
 }
 bootstrap();

@@ -31,6 +31,16 @@ spec:
                   key: AUTH_DATABASE_URL
             - name: PORT
               value: "3001"
+            - name: MAIL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_USER
+            - name: MAIL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_PASS
           command: ["sh", "-c"]
           args:
             - >

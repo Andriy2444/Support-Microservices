@@ -58,3 +58,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /apps/**/generated/
 /apps/**/node_modules/
+
+/k8s/secrets.yaml
+k8s/secrets.yaml

@@ -12,6 +12,7 @@ async function bootstrap() {
      .setVersion("1.0.0")
      .setBasePath('tickets')
      .addBearerAuth()
+     .addServer('/tickets')
      .build()
 
   const document = SwaggerModule.createDocument(app, config);

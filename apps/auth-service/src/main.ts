@@ -11,6 +11,7 @@ async function bootstrap() {
      .setTitle('Auth Service')
      .setVersion("1.0.0")
      .setBasePath('auth')
+     .addServer('/auth')
      .build()
 
   const document = SwaggerModule.createDocument(app, config);
@@ -21,7 +22,6 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log("Artem krasavchik");
   console.log(
     `🚀🤤🤫 Service Auth running on 👉 http://localhost:${port} 👈 🤫🤤🚀`,
   );
