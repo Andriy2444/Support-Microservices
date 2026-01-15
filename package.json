@@ -21,7 +21,9 @@
     "test:e2e": "jest --config ./apps/support-microservices/test/jest-e2e.json",
     "start:dev:auth": "nest start auth-service --watch --webpack false --entry-file main",
     "start:dev:users": "nest start users-service --watch --webpack false --entry-file main",
-    "start:dev:tickets": "nest start tickets-service --watch --webpack false --entry-file main"
+    "start:dev:tickets": "nest start tickets-service --watch --webpack false --entry-file main",
+    "seed:auth": "ts-node prisma/seed-auth.ts",
+    "seed:users": "ts-node prisma/seed-users.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
@@ -106,5 +108,8 @@
     "moduleNameMapper": {
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1"
     }
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }

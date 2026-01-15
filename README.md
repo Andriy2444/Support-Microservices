@@ -74,4 +74,5 @@ kubectl get pods
 kubectl get svc
 kubectl port-forward svc/api-gateway-service 3000:3000
 ```
+
 Swagger Documentation are running from http://localhost:3000/docs

@@ -19,6 +19,7 @@
       "@app/common/*": [
         "libs/common/src/*"
       ]
-    }
+    },
+    "allowSyntheticDefaultImports": true
   }
 }

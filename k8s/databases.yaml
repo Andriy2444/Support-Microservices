@@ -1,9 +1,10 @@
-# --- AUTH DATABASE ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: auth-db
 spec:
+  serviceName: "auth-db-service"
+  replicas: 1
   selector:
     matchLabels:
       app: auth-db
@@ -31,12 +32,28 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: AUTH_DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         ports:
         - containerPort: 5432
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "auth"]
+            command:
+            - sh
+            - -c
+            - pg_isready -U $POSTGRES_USER -d postgres
           initialDelaySeconds: 15
+        volumeMounts:
+        - name: auth-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: auth-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
@@ -54,10 +71,12 @@ spec:
 
 # --- USERS DATABASE ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: users-db
 spec:
+  serviceName: "users-db-service"
+  replicas: 1
   selector:
     matchLabels:
       app: users-db
@@ -85,12 +104,28 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: USERS_DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         ports:
         - containerPort: 5432
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "users"]
+            command:
+            - sh
+            - -c
+            - pg_isready -U $POSTGRES_USER -d postgres
           initialDelaySeconds: 15
+        volumeMounts:
+        - name: users-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: users-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
@@ -108,10 +143,12 @@ spec:
 
 # --- TICKETS DATABASE ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: tickets-db
 spec:
+  serviceName: "tickets-db-service"
+  replicas: 1
   selector:
     matchLabels:
       app: tickets-db
@@ -139,12 +176,28 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: TICKETS_DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         ports:
         - containerPort: 5432
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "tickets"]
+            command:
+            - sh
+            - -c
+            - pg_isready -U $POSTGRES_USER -d postgres
           initialDelaySeconds: 15
+        volumeMounts:
+        - name: tickets-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: tickets-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
 kind: Service

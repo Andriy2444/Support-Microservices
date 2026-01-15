@@ -112,10 +112,9 @@ export class TicketsController {
   @Roles('ADMIN', 'SUPPORT')
   @ApiOperation({ summary: 'Add user to ticket (Admin/Support only)' })
   async addUserToTicket(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id: number, userId: number,
     @Request() req
   ) {
-    const userId = req.user.userId; // беремо з JWT
     return this.ticketService.addUserToTicket(id, userId);
   }
 
