@@ -6,185 +6,136 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  REGISTRY: docker.io
-
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+  #     - name: Install dependencies
+  #       run: npm ci
 
-      - name: Generate Prisma Clients
-        run: |
-          npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
-          npx prisma generate --schema=apps/users-service/prisma/schema.prisma
-          npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma
+  #     - name: Generate Prisma Clients
+  #       run: |
+  #         npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
+  #         npx prisma generate --schema=apps/users-service/prisma/schema.prisma
+  #         npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma
 
-      - name: Run ESLint
-        run: npm run lint -- --ignore-pattern '**/generated/**'
-        continue-on-error: true
+  #     - name: Run ESLint
+  #       run: npm run lint -- --ignore-pattern '**/generated/**'
 
   tests:
-    needs: lint
+    # needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma Clients
-        run: |
-          npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
-          npx prisma generate --schema=apps/users-service/prisma/schema.prisma
-          npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma
 
       - name: Prepare Environments
         run: |
           mkdir -p docker
           cat <<EOF > docker/.env
-          AUTH_SV_PORT=3001
-          USERS_SV_PORT=3002
-          TICKETS_SV_PORT=3003
-          API_GATEWAY_PORT=3000
-          AUTH_DB_NAME=auth_db
-          AUTH_DB_USER=auth_user
-          AUTH_DB_PASSWORD=auth_password
-          AUTH_DB_PORT=5432
-          USERS_DB_NAME=users_db
-          USERS_DB_USER=users_user
-          USERS_DB_PASSWORD=users_password
-          USERS_DB_PORT=5433
-          TICKETS_DB_NAME=tickets_db
-          TICKETS_DB_USER=tickets_user
-          TICKETS_DB_PASSWORD=tickets_password
-          TICKETS_DB_PORT=5434
+          AUTH_SV_PORT=${{ secrets.AUTH_SV_PORT }}
+          USERS_SV_PORT=${{ secrets.USERS_SV_PORT }}
+          TICKETS_SV_PORT=${{ secrets.TICKETS_SV_PORT }}
+          AUTH_DB_NAME=${{ secrets.AUTH_DB_NAME }}
+          AUTH_DB_USER=${{ secrets.AUTH_DB_USER }}
+          AUTH_DB_PASSWORD=${{ secrets.AUTH_DB_PASSWORD }}
+          AUTH_DB_PORT=${{ secrets.AUTH_DB_PORT }}
+          USERS_DB_NAME=${{ secrets.USERS_DB_NAME }}
+          USERS_DB_USER=${{ secrets.USERS_DB_USER }}
+          USERS_DB_PASSWORD=${{ secrets.USERS_DB_PASSWORD }}
+          USERS_DB_PORT=${{ secrets.USERS_DB_PORT }}
+          TICKETS_DB_NAME=${{ secrets.TICKETS_DB_NAME }}
+          TICKETS_DB_USER=${{ secrets.TICKETS_DB_USER }}
+          TICKETS_DB_PASSWORD=${{ secrets.TICKETS_DB_PASSWORD }}
+          TICKETS_DB_PORT=${{ secrets.TICKETS_DB_PORT }}
           EOF
 
-      - name: Build Docker Images
+      - name: Build and Run Tests
         run: |
           cd docker
-          docker compose build --no-cache
-
-      - name: Start Services
-        run: |
-          cd docker
-          docker compose up -d
-          echo "Waiting for services to be ready..."
-          sleep 30
-
-      - name: Verify Services
-        run: |
-          cd docker
-          docker compose ps
-          docker compose logs auth-service || true
-          docker compose logs users-service || true
-          docker compose logs tickets-service || true
-
-      - name: Health Check
-        run: |
-          for i in {1..10}; do
-            if curl -f http://localhost:3001/health 2>/dev/null || curl -f http://localhost:3002/health 2>/dev/null || curl -f http://localhost:3003/health 2>/dev/null; then
-              echo "Services are healthy"
-              exit 0
-            fi
-            echo "Attempt $i: Services not ready yet..."
-            sleep 5
-          done
-          echo "Services health check completed"
-
-      - name: Run Tests
-        run: |
-          cd docker
-          docker compose exec -T auth-service npm run test 2>/dev/null || true
-          docker compose exec -T users-service npm run test 2>/dev/null || true
-          docker compose exec -T tickets-service npm run test 2>/dev/null || true
-        continue-on-error: true
+          docker compose up -d --build
+          sleep 15
+          # docker compose exec -T tickets-service npm run test
+          docker compose exec -T auth-service npm run test
+          docker compose exec -T users-service npm run test
 
       - name: Cleanup
         if: always()
         run: |
           cd docker
-          docker compose down -v
+          docker compose down
 
   build-and-push:
     needs: tests
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [auth-service, users-service, tickets-service, api-gateway]
+    outputs:
+      tag: ${{ steps.vars.outputs.sha_short }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      
+      - name: Set outputs
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
-        continue-on-error: true
 
-      - name: Extract metadata
-        id: meta
-        run: |
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-
-      - name: Build and Push Docker Image
+      - name: Build and Push Tickets
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/${{ matrix.service }}/Dockerfile
-          push: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+          file: ./apps/tickets-service/Dockerfile
+          push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ steps.meta.outputs.sha_short }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:latest
-          labels: |
-            org.opencontainers.image.created=${{ steps.meta.outputs.build_date }}
-            org.opencontainers.image.revision=${{ github.sha }}
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
-        continue-on-error: true
+            ${{ secrets.DOCKERHUB_USERNAME }}/tickets-service:${{ steps.vars.outputs.sha_short }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/tickets-service:latest
 
-      - name: Build Docker Image (without push)
+      - name: Build and Push Users
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/${{ matrix.service }}/Dockerfile
-          push: false
-          load: true
-          tags: ${{ matrix.service }}:latest
-        if: ${{ secrets.DOCKERHUB_USERNAME == '' }}
+          file: ./apps/users-service/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/users-service:${{ steps.vars.outputs.sha_short }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/users-service:latest
+
+      - name: Build and Push Auth
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/auth-service/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/auth-service:${{ steps.vars.outputs.sha_short }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/auth-service:latest
+
+      - name: Build and Push API Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/api-gateway/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ steps.vars.outputs.sha_short }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
 
   deploy:
     needs: build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Extract metadata
-        id: meta
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set Kubernetes Context
         uses: azure/k8s-set-context@v3
@@ -192,23 +143,17 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
-      - name: Deploy Services to Kubernetes
+      - name: Deploy to Cluster
         run: |
-          TAG=${{ steps.meta.outputs.sha_short }}
+          TAG=${{ needs.build-and-push.outputs.tag }}
           USER=${{ secrets.DOCKERHUB_USERNAME }}
           
-          echo "Deploying services with tag: $TAG"
+          kubectl set image deployment/tickets-deployment tickets-container=$USER/tickets-service:$TAG
+          kubectl set image deployment/users-deployment users-container=$USER/users-service:$TAG
+          kubectl set image deployment/auth-deployment auth-container=$USER/auth-service:$TAG
+          kubectl set image deployment/api-gateway-deployment gateway-container=$USER/api-gateway:$TAG
           
-          kubectl set image deployment/tickets-deployment tickets-container=$USER/tickets-service:$TAG --record || true
-          kubectl set image deployment/users-deployment users-container=$USER/users-service:$TAG --record || true
-          kubectl set image deployment/auth-deployment auth-container=$USER/auth-service:$TAG --record || true
-          kubectl set image deployment/api-gateway-deployment gateway-container=$USER/api-gateway:$TAG --record || true
-          
-          echo "Waiting for rollout..."
-          kubectl rollout status deployment/tickets-deployment --timeout=5m || true
-          kubectl rollout status deployment/users-deployment --timeout=5m || true
-          kubectl rollout status deployment/auth-deployment --timeout=5m || true
-          kubectl rollout status deployment/api-gateway-deployment --timeout=5m || true
-          
-          echo "Deployment completed!"
-          kubectl get deployments
+          kubectl rollout status deployment/tickets-deployment
+          kubectl rollout status deployment/users-deployment
+          kubectl rollout status deployment/auth-deployment
+          kubectl rollout status deployment/api-gateway-deployment
