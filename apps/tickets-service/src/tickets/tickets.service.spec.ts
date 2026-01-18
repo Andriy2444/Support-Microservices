@@ -43,7 +43,7 @@ describe('TicketsService', () => {
       const userId = 999;
       mockPrismaService.ticket.findMany.mockResolvedValue([{ id: 101 }]);
 
-      const result = await service.getTickets(userId, 'USER');
+      const result = await service.getTickets(userId, 'USER' as any);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: { users: { some: { userId } } },
@@ -56,7 +56,7 @@ describe('TicketsService', () => {
       const userId = 2;
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
       
-      await service.getTickets(userId, 'SUPPORT');
+      await service.getTickets(userId, 'SUPPORT' as any);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: {
@@ -75,7 +75,7 @@ describe('TicketsService', () => {
     });
 
     it('should return all tickets for ADMIN role', async () => {
-      await service.getTickets(1, 'ADMIN');
+      await service.getTickets(1, 'ADMIN' as any);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: {},
@@ -89,7 +89,7 @@ describe('TicketsService', () => {
       const dto = { title: 'Test', description: 'Desc', userId: 1 };
       mockPrismaService.ticket.create.mockResolvedValue({ id: 1, ...dto });
 
-      await service.createTicket(dto);
+      await service.createTicket(dto as any);
       expect(mockPrismaService.ticket.create).toHaveBeenCalled();
     });
 
@@ -140,7 +140,7 @@ describe('TicketsService', () => {
       const messageData = { message: 'Hello', userId: 1 };
       mockPrismaService.message.create.mockResolvedValue({ id: 1, ...messageData });
 
-      await service.addMessage(ticketId, messageData);
+      await service.addMessage(ticketId, messageData as any);
 
       expect(mockPrismaService.message.create).toHaveBeenCalledWith({
         data: {
@@ -158,7 +158,8 @@ describe('TicketsService', () => {
 
       const msg = { id: 1, message: 'Hi' };
       mockPrismaService.message.findUnique.mockResolvedValue(msg);
-      expect(await service.getMessageById(1)).toEqual(msg);
+      const result = await service.getMessageById(1);
+      expect(result).toEqual(msg);
     });
   });
 });
