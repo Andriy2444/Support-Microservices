@@ -79,11 +79,15 @@ jobs:
     outputs:
       tag: ${{ steps.vars.outputs.sha_short }}
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set outputs
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -91,32 +95,38 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Tickets
+      - name: Build and Push Tickets Service
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./apps/tickets-service/Dockerfile
           push: true
+          build-args: |
+            SERVICE_NAME=tickets-service
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/tickets-service:${{ steps.vars.outputs.sha_short }}
             ${{ secrets.DOCKERHUB_USERNAME }}/tickets-service:latest
 
-      - name: Build and Push Users
+      - name: Build and Push Users Service
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./apps/users-service/Dockerfile
           push: true
+          build-args: |
+            SERVICE_NAME=users-service
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/users-service:${{ steps.vars.outputs.sha_short }}
             ${{ secrets.DOCKERHUB_USERNAME }}/users-service:latest
 
-      - name: Build and Push Auth
+      - name: Build and Push Auth Service
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./apps/auth-service/Dockerfile
           push: true
+          build-args: |
+            SERVICE_NAME=auth-service
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/auth-service:${{ steps.vars.outputs.sha_short }}
             ${{ secrets.DOCKERHUB_USERNAME }}/auth-service:latest
@@ -127,6 +137,8 @@ jobs:
           context: .
           file: ./apps/api-gateway/Dockerfile
           push: true
+          build-args: |
+            SERVICE_NAME=api-gateway
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ steps.vars.outputs.sha_short }}
             ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
