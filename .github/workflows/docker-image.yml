@@ -65,8 +65,12 @@ jobs:
           docker compose exec -T tickets-service npm run test
           docker compose exec -T auth-service npm run test
           docker compose exec -T users-service npm run test
-        finally:
-          cd docker && docker compose down
+
+      - name: Cleanup
+        if: always()
+        run: |
+          cd docker
+          docker compose down
 
   build-and-push:
     needs: tests
