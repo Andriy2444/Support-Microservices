@@ -9,6 +9,7 @@ const mockPrismaService = {
   },
   ticket: {
     findMany: jest.fn(),
+    findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -34,43 +35,52 @@ describe('TicketsService', () => {
 
     service = module.get<TicketsService>(TicketsService);
     prisma = module.get<PrismaService>(PrismaService);
-    jest.clearAllMocks(); // Очищуємо виклики перед кожним тестом
+    jest.clearAllMocks();
   });
 
   describe('getTickets logic by Roles', () => {
-    it('should throw NotFoundException if user does not exist', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-      await expect(service.getTickets(999, 'ADMIN')).rejects.toThrow(NotFoundException);
-    });
-
-    it('should return tickets for Role 1 (User)', async () => {
+    it('should return tickets for USER role', async () => {
       const userId = 999;
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: userId, role: 1 });
       mockPrismaService.ticket.findMany.mockResolvedValue([{ id: 101 }]);
 
-      const result = await service.getTickets(userId, 'ADMIN');
+      const result = await service.getTickets(userId, 'USER');
 
-      expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { users: { some: { userId } } }
-        })
-      );
+      expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
+        where: { users: { some: { userId } } },
+        include: { users: true, messages: true },
+      });
       expect(result).toHaveLength(1);
     });
 
-    it('should return tickets for Role 2 (Support) with OR logic', async () => {
+    it('should return tickets for SUPPORT role with OR logic', async () => {
       const userId = 2;
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: userId, role: 2 });
+      mockPrismaService.ticket.findMany.mockResolvedValue([]);
       
-      await service.getTickets(userId, 'ADMIN');
+      await service.getTickets(userId, 'SUPPORT');
 
-      expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            OR: expect.any(Array)
-          })
-        })
-      );
+      expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { status: 'OPEN' },
+            {
+              AND: [
+                { users: { some: { userId } } },
+                { status: { in: ['IN_PROGRESS', 'CLOSED'] } },
+              ],
+            },
+          ],
+        },
+        include: { users: true, messages: true },
+      });
+    });
+
+    it('should return all tickets for ADMIN role', async () => {
+      await service.getTickets(1, 'ADMIN');
+
+      expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
+        where: {},
+        include: { users: true, messages: true },
+      });
     });
   });
 
@@ -80,32 +90,34 @@ describe('TicketsService', () => {
       mockPrismaService.ticket.create.mockResolvedValue({ id: 1, ...dto });
 
       await service.createTicket(dto);
-
       expect(mockPrismaService.ticket.create).toHaveBeenCalled();
     });
 
     it('should patch a ticket', async () => {
       const ticketId = 1;
       const updateData = { status: 'CLOSED' };
+      
+      mockPrismaService.ticket.findUnique.mockResolvedValue({ id: ticketId });
       mockPrismaService.ticket.update.mockResolvedValue({ id: ticketId, status: 'CLOSED' });
 
       await service.patchTicket(ticketId, updateData as any);
 
-      expect(mockPrismaService.ticket.update).toHaveBeenCalledWith({
-        where: { id: ticketId },
-        data: updateData,
-      });
+      expect(mockPrismaService.ticket.findUnique).toHaveBeenCalledWith({ where: { id: ticketId } });
+      expect(mockPrismaService.ticket.update).toHaveBeenCalled();
     });
 
-    it('should delete a ticket', async () => {
+    it('should throw NotFoundException if ticket not found during delete', async () => {
+      mockPrismaService.ticket.findUnique.mockResolvedValue(null);
+      await expect(service.deleteTicket(1)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should delete a ticket if it exists', async () => {
       const ticketId = 1;
+      mockPrismaService.ticket.findUnique.mockResolvedValue({ id: ticketId });
       mockPrismaService.ticket.delete.mockResolvedValue({ id: ticketId });
 
       await service.deleteTicket(ticketId);
-
-      expect(mockPrismaService.ticket.delete).toHaveBeenCalledWith({
-        where: { id: ticketId }
-      });
+      expect(mockPrismaService.ticket.delete).toHaveBeenCalledWith({ where: { id: ticketId } });
     });
   });
 
@@ -116,8 +128,11 @@ describe('TicketsService', () => {
       mockPrismaService.ticket.update.mockResolvedValue({ id: ticketId });
 
       await service.addUserToTicket(ticketId, userId);
-
-      expect(mockPrismaService.ticket.update).toHaveBeenCalled();
+      expect(mockPrismaService.ticket.update).toHaveBeenCalledWith({
+        where: { id: ticketId },
+        data: { users: { create: { userId } } },
+        include: { users: true, messages: true },
+      });
     });
 
     it('should create a message', async () => {
@@ -128,7 +143,12 @@ describe('TicketsService', () => {
       await service.addMessage(ticketId, messageData);
 
       expect(mockPrismaService.message.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({ ticketId })
+        data: {
+          message: 'Hello',
+          image: undefined,
+          userId: 1,
+          ticketId: 1,
+        },
       });
     });
 
