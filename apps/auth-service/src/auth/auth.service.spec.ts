@@ -54,9 +54,9 @@ describe('AuthService', () => {
     it('should throw error if user already exists', async () => {
       prismaMock.auth.findUnique.mockResolvedValue({ id: 1 });
 
-      await expect(
-        service.register('test@mail.com', '123456'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.register('test@mail.com', '123456')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should register user successfully', async () => {
@@ -78,14 +78,11 @@ describe('AuthService', () => {
         'test@mail.com',
         'verify-token',
       );
-      expect(userClientMock.emit).toHaveBeenCalledWith(
-        'auth.user.created',
-        {
-          authUserId: 1,
-          email: 'test@mail.com',
-          version: 1,
-        },
-      );
+      expect(userClientMock.emit).toHaveBeenCalledWith('auth.user.created', {
+        authUserId: 1,
+        email: 'test@mail.com',
+        version: 1,
+      });
 
       expect(result).toEqual({
         message: 'Registered successfully',
@@ -98,9 +95,9 @@ describe('AuthService', () => {
     it('should throw if user not found', async () => {
       prismaMock.auth.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.login('test@mail.com', '123456'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('test@mail.com', '123456')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw if password is invalid', async () => {
@@ -113,9 +110,9 @@ describe('AuthService', () => {
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
 
-      await expect(
-        service.login('test@mail.com', '123456'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('test@mail.com', '123456')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw if email not verified', async () => {
@@ -128,9 +125,9 @@ describe('AuthService', () => {
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
 
-      await expect(
-        service.login('test@mail.com', '123456'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('test@mail.com', '123456')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return access token on success', async () => {

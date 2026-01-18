@@ -68,7 +68,7 @@ export class UserService {
 
     // Створюємо об'єкт data тільки з дозволеними полями
     const data: any = {};
-    
+
     if (updateUserDto.email !== undefined) {
       data.email = updateUserDto.email;
     }

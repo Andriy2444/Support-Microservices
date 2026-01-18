@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, UserRole } from '../generated/client';
 
@@ -14,7 +18,7 @@ export class TicketsService {
 
   async getTickets(userId: number, role: string) {
     let whereClause: Prisma.TicketWhereInput = {};
-  
+
     switch (role) {
       case 'USER':
         whereClause = { users: { some: { userId } } };
@@ -43,7 +47,11 @@ export class TicketsService {
     });
   }
 
-  async createTicket(data: { title: string; description: string; userId: number }) {
+  async createTicket(data: {
+    title: string;
+    description: string;
+    userId: number;
+  }) {
     return this.prisma.ticket.create({
       data: {
         title: data.title,
@@ -85,7 +93,10 @@ export class TicketsService {
     });
   }
 
-  async addMessage(ticketId: number, data: { message: string; image?: string; userId: number }) {
+  async addMessage(
+    ticketId: number,
+    data: { message: string; image?: string; userId: number },
+  ) {
     return this.prisma.message.create({
       data: {
         message: data.message,
@@ -104,7 +115,9 @@ export class TicketsService {
   }
 
   async getMessageById(messageId: number) {
-    const message = await this.prisma.message.findUnique({ where: { id: messageId } });
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+    });
     if (!message) throw new NotFoundException('Message not found');
     return message;
   }

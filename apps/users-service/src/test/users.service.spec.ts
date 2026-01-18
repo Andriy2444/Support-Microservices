@@ -33,8 +33,20 @@ describe('UserService', () => {
   describe('findAll', () => {
     it('should return all users without sensitive data', async () => {
       const mockUsers = [
-        { id: 1, email: 'user1@test.com', name: 'User One', role: 'USER', createdAt: new Date() },
-        { id: 2, email: 'user2@test.com', name: 'User Two', role: 'ADMIN', createdAt: new Date() },
+        {
+          id: 1,
+          email: 'user1@test.com',
+          name: 'User One',
+          role: 'USER',
+          createdAt: new Date(),
+        },
+        {
+          id: 2,
+          email: 'user2@test.com',
+          name: 'User Two',
+          role: 'ADMIN',
+          createdAt: new Date(),
+        },
       ];
 
       mockPrismaService.user.findMany.mockResolvedValue(mockUsers);
@@ -50,7 +62,7 @@ describe('UserService', () => {
           createdAt: true,
         },
       });
-      
+
       expect(result).toEqual(mockUsers);
       // Перевіряємо, що пароль не повертається
       expect(result[0]).not.toHaveProperty('password');
@@ -58,9 +70,9 @@ describe('UserService', () => {
 
     it('should return empty array when no users exist', async () => {
       mockPrismaService.user.findMany.mockResolvedValue([]);
-      
+
       const result = await service.findAll();
-      
+
       expect(result).toEqual([]);
       expect(mockPrismaService.user.findMany).toHaveBeenCalledTimes(1);
     });
@@ -90,7 +102,7 @@ describe('UserService', () => {
           createdAt: true,
         },
       });
-      
+
       expect(result).toEqual(mockUser);
       expect(result.id).toBe(1);
     });
@@ -99,7 +111,9 @@ describe('UserService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-      await expect(service.findOne(999)).rejects.toThrow('User with ID 999 not found');
+      await expect(service.findOne(999)).rejects.toThrow(
+        'User with ID 999 not found',
+      );
     });
 
     it('should call findUnique with correct ID', async () => {
@@ -117,7 +131,7 @@ describe('UserService', () => {
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: userId },
-        })
+        }),
       );
     });
   });
@@ -140,7 +154,7 @@ describe('UserService', () => {
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email },
       });
-      
+
       expect(result).toEqual(mockUser);
       expect(result.email).toBe(email);
     });
@@ -187,7 +201,7 @@ describe('UserService', () => {
           createdAt: true,
         },
       });
-      
+
       expect(result).toEqual(createdUser);
       expect(result.role).toBe('USER');
     });
@@ -219,7 +233,7 @@ describe('UserService', () => {
         },
         select: expect.any(Object),
       });
-      
+
       expect(result.role).toBe('ADMIN');
     });
   });
@@ -265,7 +279,7 @@ describe('UserService', () => {
         },
         select: expect.any(Object),
       });
-      
+
       expect(result.name).toBe('Updated Name');
       expect(result.email).toBe('updated@example.com');
     });
@@ -298,17 +312,22 @@ describe('UserService', () => {
     it('should throw NotFoundException when updating non-existent user', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(999, { name: 'New Name' }))
-        .rejects.toThrow(NotFoundException);
+      await expect(service.update(999, { name: 'New Name' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   // Тестування edge cases
   describe('Edge Cases', () => {
     it('should handle database errors gracefully', async () => {
-      mockPrismaService.user.findMany.mockRejectedValue(new Error('Database connection failed'));
+      mockPrismaService.user.findMany.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
-      await expect(service.findAll()).rejects.toThrow('Database connection failed');
+      await expect(service.findAll()).rejects.toThrow(
+        'Database connection failed',
+      );
     });
 
     it('should handle partial update DTO with undefined values', async () => {
@@ -316,10 +335,10 @@ describe('UserService', () => {
       const updateUserDto = { name: undefined, email: undefined };
 
       mockPrismaService.user.findUnique.mockResolvedValue({ id: userId });
-      
+
       // Мокаємо update, але очікуємо data: {}
-      mockPrismaService.user.update.mockImplementation(({ data }) => 
-        Promise.resolve({ id: userId, ...data })
+      mockPrismaService.user.update.mockImplementation(({ data }) =>
+        Promise.resolve({ id: userId, ...data }),
       );
 
       await service.update(userId, updateUserDto);

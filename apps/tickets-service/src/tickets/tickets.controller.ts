@@ -11,7 +11,13 @@ import {
   Request,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
-import { IsString, IsInt, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
 import {
   ApiOperation,
   ApiTags,
@@ -101,7 +107,7 @@ export class TicketsController {
   @ApiOperation({ summary: 'Update ticket' })
   async patchTicket(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateTicketDto: UpdateTicketDto
+    @Body() updateTicketDto: UpdateTicketDto,
   ) {
     return this.ticketService.patchTicket(id, updateTicketDto);
   }
@@ -118,7 +124,7 @@ export class TicketsController {
   @ApiOperation({ summary: 'Add user to ticket (Admin/Support only)' })
   async addUserToTicket(
     @Param('id', ParseIntPipe) id: number,
-    @Body('userId', ParseIntPipe) userId: number
+    @Body('userId', ParseIntPipe) userId: number,
   ) {
     return this.ticketService.addUserToTicket(id, userId);
   }
@@ -129,10 +135,13 @@ export class TicketsController {
   async createMessage(
     @Param('ticketId', ParseIntPipe) ticketId: number,
     @Request() req,
-    @Body() createMessageDto: CreateMessageDto
+    @Body() createMessageDto: CreateMessageDto,
   ) {
     const userId = req.user.userId;
-    return this.ticketService.addMessage(ticketId, { ...createMessageDto, userId });
+    return this.ticketService.addMessage(ticketId, {
+      ...createMessageDto,
+      userId,
+    });
   }
 
   @Get(':ticketId/messages')

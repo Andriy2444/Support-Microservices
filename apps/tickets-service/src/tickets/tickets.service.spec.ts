@@ -55,7 +55,7 @@ describe('TicketsService', () => {
     it('should return tickets for SUPPORT role with OR logic', async () => {
       const userId = 2;
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      
+
       await service.getTickets(userId, 'SUPPORT' as any);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
@@ -96,13 +96,18 @@ describe('TicketsService', () => {
     it('should patch a ticket', async () => {
       const ticketId = 1;
       const updateData = { status: 'CLOSED' };
-      
+
       mockPrismaService.ticket.findUnique.mockResolvedValue({ id: ticketId });
-      mockPrismaService.ticket.update.mockResolvedValue({ id: ticketId, status: 'CLOSED' });
+      mockPrismaService.ticket.update.mockResolvedValue({
+        id: ticketId,
+        status: 'CLOSED',
+      });
 
       await service.patchTicket(ticketId, updateData as any);
 
-      expect(mockPrismaService.ticket.findUnique).toHaveBeenCalledWith({ where: { id: ticketId } });
+      expect(mockPrismaService.ticket.findUnique).toHaveBeenCalledWith({
+        where: { id: ticketId },
+      });
       expect(mockPrismaService.ticket.update).toHaveBeenCalled();
     });
 
@@ -117,7 +122,9 @@ describe('TicketsService', () => {
       mockPrismaService.ticket.delete.mockResolvedValue({ id: ticketId });
 
       await service.deleteTicket(ticketId);
-      expect(mockPrismaService.ticket.delete).toHaveBeenCalledWith({ where: { id: ticketId } });
+      expect(mockPrismaService.ticket.delete).toHaveBeenCalledWith({
+        where: { id: ticketId },
+      });
     });
   });
 
@@ -138,7 +145,10 @@ describe('TicketsService', () => {
     it('should create a message', async () => {
       const ticketId = 1;
       const messageData = { message: 'Hello', userId: 1 };
-      mockPrismaService.message.create.mockResolvedValue({ id: 1, ...messageData });
+      mockPrismaService.message.create.mockResolvedValue({
+        id: 1,
+        ...messageData,
+      });
 
       await service.addMessage(ticketId, messageData as any);
 
@@ -154,7 +164,9 @@ describe('TicketsService', () => {
 
     it('should get message by ID or throw error', async () => {
       mockPrismaService.message.findUnique.mockResolvedValue(null);
-      await expect(service.getMessageById(99)).rejects.toThrow(NotFoundException);
+      await expect(service.getMessageById(99)).rejects.toThrow(
+        NotFoundException,
+      );
 
       const msg = { id: 1, message: 'Hi' };
       mockPrismaService.message.findUnique.mockResolvedValue(msg);

@@ -22,45 +22,45 @@ export class AuthService {
   ) {}
 
   // ================= REGISTER =================
-async register(email: string, password: string) {
-  // 1️⃣ перевірка
-  const exists = await this.prisma.auth.findUnique({
-    where: { email },
-  });
+  async register(email: string, password: string) {
+    // 1️⃣ перевірка
+    const exists = await this.prisma.auth.findUnique({
+      where: { email },
+    });
 
-  if (exists) {
-    throw new BadRequestException('User already exists');
-  }
+    if (exists) {
+      throw new BadRequestException('User already exists');
+    }
 
-  const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 10);
 
-  const user = await this.prisma.auth.create({
-    data: {
-      email,
-      password: hash,
-    },
-  });
+    const user = await this.prisma.auth.create({
+      data: {
+        email,
+        password: hash,
+      },
+    });
 
-  const verifyToken = this.jwt.sign(
-    {
-      sub: user.id,
-      type: 'verify',
-    },
-    { expiresIn: '15m' },
-  );
+    const verifyToken = this.jwt.sign(
+      {
+        sub: user.id,
+        type: 'verify',
+      },
+      { expiresIn: '15m' },
+    );
 
-  await this.mailService.sendVerifyEmail(email, verifyToken);
+    await this.mailService.sendVerifyEmail(email, verifyToken);
 
     this.userClient.emit('auth.user.created', {
-    authUserId: user.id,
-    email: user.email,
-    version: 1,
-  });
+      authUserId: user.id,
+      email: user.email,
+      version: 1,
+    });
 
-  return {
-    message: 'Registered successfully',
-  };
-}
+    return {
+      message: 'Registered successfully',
+    };
+  }
 
   // ================= LOGIN =================
   async login(email: string, password: string) {

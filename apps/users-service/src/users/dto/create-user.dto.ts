@@ -1,11 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 // Відповідає Prisma схемі
 export enum CreateUserRole {
   USER = 'USER',
   ADMIN = 'ADMIN',
-  SUPPORT = 'SUPPORT'
+  SUPPORT = 'SUPPORT',
 }
 
 export class CreateUserDto {

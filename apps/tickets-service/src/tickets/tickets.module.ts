@@ -12,7 +12,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
       secret: process.env.JWT_SECRET || 'jwt-secret', // той самий секрет, що і в auth
       signOptions: { expiresIn: '1h' },
     }),
-    PrismaModule
+    PrismaModule,
   ],
   controllers: [TicketsController],
   providers: [TicketsService, JwtAuthGuard, RolesGuard],

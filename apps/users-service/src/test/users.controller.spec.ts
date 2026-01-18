@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from '../users/users.controller';
 import { UserService } from '../users/users.service';
-import { JwtAuthGuard, RolesGuard, ControllerUserRole, Roles } from '../users/users.controller';
+import {
+  JwtAuthGuard,
+  RolesGuard,
+  ControllerUserRole,
+  Roles,
+} from '../users/users.controller';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
@@ -43,11 +48,11 @@ describe('UserController', () => {
         Reflector,
       ],
     })
-    .overrideGuard(JwtAuthGuard)
-    .useValue({ canActivate: jest.fn(() => true) })
-    .overrideGuard(RolesGuard)
-    .useValue({ canActivate: jest.fn(() => true) })
-    .compile();
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
     controller = module.get<UserController>(UserController);
     service = module.get<UserService>(UserService);
@@ -75,7 +80,9 @@ describe('UserController', () => {
       } as any;
 
       // Мокаємо reflector
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([ControllerUserRole.ADMIN]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([ControllerUserRole.ADMIN]);
 
       const result = rolesGuard.canActivate(context);
       expect(result).toBe(true);
@@ -92,7 +99,9 @@ describe('UserController', () => {
         })),
       } as any;
 
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([ControllerUserRole.ADMIN]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([ControllerUserRole.ADMIN]);
 
       expect(() => rolesGuard.canActivate(context)).toThrow(ForbiddenException);
     });
@@ -119,9 +128,13 @@ describe('UserController', () => {
 
     it('should throw error if service throws', async () => {
       const req = { user: mockUser };
-      mockUserService.findOne.mockRejectedValue(new NotFoundException('User not found'));
+      mockUserService.findOne.mockRejectedValue(
+        new NotFoundException('User not found'),
+      );
 
-      await expect(controller.getProfile(req)).rejects.toThrow(NotFoundException);
+      await expect(controller.getProfile(req)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -144,7 +157,10 @@ describe('UserController', () => {
 
       const result = await controller.updateProfile(req, updateUserDto);
 
-      expect(mockUserService.update).toHaveBeenCalledWith(mockUser.userId, updateUserDto);
+      expect(mockUserService.update).toHaveBeenCalledWith(
+        mockUser.userId,
+        updateUserDto,
+      );
       expect(result).toEqual(updatedUser);
     });
 
@@ -155,11 +171,13 @@ describe('UserController', () => {
         role: 'ADMIN' as any, // Примусово додаємо роль
       };
 
-      await expect(controller.updateProfile(req, updateUserDto))
-        .rejects.toThrow(ForbiddenException);
-      
-      await expect(controller.updateProfile(req, updateUserDto))
-        .rejects.toThrow('You cannot change your own role');
+      await expect(
+        controller.updateProfile(req, updateUserDto),
+      ).rejects.toThrow(ForbiddenException);
+
+      await expect(
+        controller.updateProfile(req, updateUserDto),
+      ).rejects.toThrow('You cannot change your own role');
     });
 
     it('should allow empty update', async () => {
@@ -178,7 +196,10 @@ describe('UserController', () => {
 
       const result = await controller.updateProfile(req, updateUserDto);
 
-      expect(mockUserService.update).toHaveBeenCalledWith(mockUser.userId, updateUserDto);
+      expect(mockUserService.update).toHaveBeenCalledWith(
+        mockUser.userId,
+        updateUserDto,
+      );
       expect(result).toEqual(currentUser);
     });
   });
@@ -230,8 +251,20 @@ describe('UserController', () => {
   describe('GET /users (Admin/Support only)', () => {
     it('should return all users for ADMIN', async () => {
       const users = [
-        { id: 1, email: 'user1@test.com', name: 'User One', role: 'USER', createdAt: new Date() },
-        { id: 2, email: 'admin@test.com', name: 'Admin', role: 'ADMIN', createdAt: new Date() },
+        {
+          id: 1,
+          email: 'user1@test.com',
+          name: 'User One',
+          role: 'USER',
+          createdAt: new Date(),
+        },
+        {
+          id: 2,
+          email: 'admin@test.com',
+          name: 'Admin',
+          role: 'ADMIN',
+          createdAt: new Date(),
+        },
       ];
 
       mockUserService.findAll.mockResolvedValue(users);
@@ -273,9 +306,13 @@ describe('UserController', () => {
 
     it('should propagate NotFoundException from service', async () => {
       const userId = 999;
-      mockUserService.findOne.mockRejectedValue(new NotFoundException(`User with ID ${userId} not found`));
+      mockUserService.findOne.mockRejectedValue(
+        new NotFoundException(`User with ID ${userId} not found`),
+      );
 
-      await expect(controller.findOne(userId)).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne(userId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should parse ID as number', async () => {
@@ -301,14 +338,29 @@ describe('UserController', () => {
   describe('Role Decorators', () => {
     it('should have correct roles metadata on endpoints', () => {
       // Перевіряємо метадані декораторів @Roles
-      const metadata = Reflect.getMetadata('roles', UserController.prototype.create);
+      const metadata = Reflect.getMetadata(
+        'roles',
+        UserController.prototype.create,
+      );
       expect(metadata).toEqual([ControllerUserRole.ADMIN]);
 
-      const findAllMetadata = Reflect.getMetadata('roles', UserController.prototype.findAll);
-      expect(findAllMetadata).toEqual([ControllerUserRole.ADMIN, ControllerUserRole.SUPPORT]);
+      const findAllMetadata = Reflect.getMetadata(
+        'roles',
+        UserController.prototype.findAll,
+      );
+      expect(findAllMetadata).toEqual([
+        ControllerUserRole.ADMIN,
+        ControllerUserRole.SUPPORT,
+      ]);
 
-      const findOneMetadata = Reflect.getMetadata('roles', UserController.prototype.findOne);
-      expect(findOneMetadata).toEqual([ControllerUserRole.ADMIN, ControllerUserRole.SUPPORT]);
+      const findOneMetadata = Reflect.getMetadata(
+        'roles',
+        UserController.prototype.findOne,
+      );
+      expect(findOneMetadata).toEqual([
+        ControllerUserRole.ADMIN,
+        ControllerUserRole.SUPPORT,
+      ]);
     });
   });
 
@@ -327,7 +379,9 @@ describe('UserController', () => {
       // Мокаємо, що сервіс кидає помилку валідації
       mockUserService.update.mockRejectedValue(new Error('Validation failed'));
 
-      await expect(controller.updateProfile(req, invalidDto)).rejects.toThrow('Validation failed');
+      await expect(controller.updateProfile(req, invalidDto)).rejects.toThrow(
+        'Validation failed',
+      );
     });
   });
 });
