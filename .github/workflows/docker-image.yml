@@ -141,7 +141,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-        if: secrets.DOCKERHUB_USERNAME != ''
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        continue-on-error: true
 
       - name: Extract metadata
         id: meta
@@ -161,7 +162,8 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ steps.meta.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
-        if: secrets.DOCKERHUB_USERNAME != ''
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        continue-on-error: true
 
       - name: Build Docker Image (without push)
         uses: docker/build-push-action@v5
@@ -171,11 +173,11 @@ jobs:
           push: false
           load: true
           tags: ${{ matrix.service }}:latest
-        if: secrets.DOCKERHUB_USERNAME == ''
+        if: ${{ secrets.DOCKERHUB_USERNAME == '' }}
 
   deploy:
     needs: build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.KUBE_CONFIG != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
