@@ -4,75 +4,131 @@
 
 # Support Microservices Project
 
-This project is a **support ticket system** built with **NestJS**, **Prisma**, **PostgreSQL**, **RabbitMQ**, **JWT authentication**, and containerized using **Docker**. It follows a **microservices architecture** with separate services for **authentication**, **users**, and **tickets**.
-
 ---
 
-## Architecture
+## 🏗 Architecture Overview
+This project implements a Support Ticket System using a microservices pattern. Each service is isolated, has its own database, and communicates asynchronously via RabbitMQ.
 
-- **API Gateway** – Handles incoming requests and routes them to the appropriate microservice.  
-- **Auth Service** – Manages user authentication and JWT token issuance.  
-- **Users Service** – Manages user data and roles.  
-- **Tickets Service** – Manages tickets, messages, and ticket-user relationships.  
-- **RabbitMQ** – Used for inter-service communication (events, such as user creation).  
-- **PostgreSQL** – Each service has its own database:  
-  - `auth_db` for Auth service  
-  - `users_db` for Users service  
-  - `tickets_db` for Tickets service  
-- **Guards & Roles** – JWT authentication and role-based access control (Admin, Support, User).
+- **API Gateway:** Single entry point, routing, and Swagger aggregation.
 
-**Technologies:**  
-NestJS (microservices), Prisma (ORM for PostgreSQL), JWT authentication, Docker & Docker Compose, RabbitMQ for events, Swagger for API documentation.
+- **Auth Service:** Identity management, JWT, and security.
 
+- **Users Service:** Profile management and RBAC (Role-Based Access Control).
+
+- **Tickets Service:** Core business logic for support requests.
+
+- **Event Bus:** RabbitMQ for decoupled service communication.
+
+### 🛠 Tech Stack
+
+- **Framework:** NestJS
+
+- **ORM:** Prisma (PostgreSQL)
+
+- **DevOps:** Docker, Kubernetes (K8s), GitHub Actions (CI)
+---
+## 📁 Project Structure
+```
+.
+├── apps/
+│   ├── api-gateway/
+│   ├── auth-service/
+│   ├── users-service/
+│   └── tickets-service/
+│       ├── prisma/
+│       ├── src/
+|       ├── Dockerfile
+│       └── .env.example
+├── docker/
+│   ├── docker-compose.yaml
+│   └── .env.example
+├── k8s/
+│   ├── config.yaml
+│   ├── databases.yaml
+│   ├── gateway.yaml
+│   ├── rabbitmq-deployment.yaml
+│   ├── services.yaml
+│   └── secrets.yaml.example
+├── .github/workflows/
+│   └── docker-image.yml
+├── package.json
+└── nest-cli.json
+```
 ---
 
-## Local Setup
+## 🐋 Local Setup (Docker)
 
-1. **Clone the repository:**
+### 1. **Clone the repository:**
 ```bash
 git clone https://github.com/Cyxariki-team/Support-Microservices.git
 cd Support-Microservices
 ```
-2. **Install dependencies:**
+### 2. **Create .env from service and docker**
+Copy ```.env.exemple``` to ```.env``` and change to your data.
+
+From:
+- ```Support-Microservices\docker\.env```
+- ```Support-Microservices\apps\service\.env```
+### 3. **Install dependencies:**
 ```bash
 npm install
 ```
-3. **Generate Prisma clients for each service:**
+### 4. **Generate Prisma clients for each service:**
 ```bash
 npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
 npx prisma generate --schema=apps/users-service/prisma/schema.prisma
 npx prisma generate --schema=apps/tickets-service/prisma/schema.prisma
 ```
-4. **Start Docker services:**
+### 5. **Start Docker services:**
 ```bash
 cd docker
 docker-compose up --build
 ```
-5. **Run API Gateway locally:**
+### 6. **Run API Gateway locally:**
 ```bash
 nest start api-gateway --watch
 ```
 Swagger Documentation are running from http://localhost:3000/docs
 
-## K8s Setup
-1. **Build docker**
+---
+
+## 💎 K8s Setup
+### 1. **Build docker**
 ```bash
 docker build -t docker-auth-service:latest . --build-arg SERVICE_NAME=auth-service -f apps/auth-service/Dockerfile
 docker build -t docker-users-service:latest . --build-arg SERVICE_NAME=users-service -f apps/users-service/Dockerfile
 docker build -t docker-tickets-service:latest . --build-arg SERVICE_NAME=tickets-service -f apps/tickets-service/Dockerfile
 docker build -t docker-api-gateway:latest . --build-arg SERVICE_NAME=api-gateway -f apps/api-gateway/Dockerfile
 ```
+### 2. **Create secrets.yaml**
+Copy ```secrets.yaml.exemple``` to ```secrets.yaml``` and change to your data.
 
-2. **Apply k8s**
+From:
+- ```Support-Microservices\k8s\secrets.yaml```
+### 3. **Apply k8s**
 ```bash
 kubectl apply -f k8s/
 ```
-
-3. **Check**
+### 4. **Check**
 ```bash
 kubectl get pods
 kubectl get svc
 kubectl port-forward svc/api-gateway-service 3000:3000
 ```
-
 Swagger Documentation are running from http://localhost:3000/docs
+
+---
+
+## Team 👥
+
+- **Жмурко Андрій** - **System Architect & DevOps**
+  - _Architecture, API Gateway, K8s & Docker._
+
+- **Осадець Орест** - **Backend Developer**
+  - _Tickets service & GitHub CI_
+
+- **Назаркевич Олександр** - **Backend Developer**
+  - _Users service_
+
+- **Куронав Артем** - **Backend Developer**
+  - _Auth service_
