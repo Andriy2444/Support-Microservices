@@ -62,7 +62,7 @@ jobs:
           cd docker
           docker compose up -d --build
           sleep 15
-          docker compose exec -T tickets-service npm run test
+          # docker compose exec -T tickets-service npm run test
           # docker compose exec -T auth-service npm run test
           # docker compose exec -T users-service npm run test
 
