@@ -21,14 +21,19 @@ import {
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard, Roles } from './roles.guard';
 
-enum TicketStatus {
+export enum TicketStatus {
   OPEN = 'OPEN',
   IN_PROGRESS = 'IN_PROGRESS',
   CLOSED = 'CLOSED',
 }
 
-// DTO без userId — він береться з JWT
-class CreateTicketDto {
+export enum ControllerUserRole {
+  ADMIN = 'ADMIN',
+  SUPPORT = 'SUPPORT',
+  USER = 'USER',
+}
+
+export class CreateTicketDto {
   @ApiProperty({ example: 'Проблема з доступом' })
   @IsString()
   @IsNotEmpty()
@@ -40,14 +45,14 @@ class CreateTicketDto {
   description: string;
 }
 
-class UpdateTicketDto {
+export class UpdateTicketDto {
   @ApiProperty({ example: 'CLOSED', enum: TicketStatus, required: false })
   @IsEnum(TicketStatus)
   @IsOptional()
   status?: TicketStatus;
 }
 
-class CreateMessageDto {
+export class CreateMessageDto {
   @ApiProperty({ example: 'Текст повідомлення' })
   @IsString()
   @IsNotEmpty()
@@ -87,7 +92,7 @@ export class TicketsController {
   async createTicket(@Request() req, @Body() createTicketDto: CreateTicketDto) {
     return this.ticketService.createTicket({
       ...createTicketDto,
-      userId: req.user.userId, // беремо userId з JWT
+      userId: req.user.userId,
     });
   }
 
@@ -112,8 +117,8 @@ export class TicketsController {
   @Roles('ADMIN', 'SUPPORT')
   @ApiOperation({ summary: 'Add user to ticket (Admin/Support only)' })
   async addUserToTicket(
-    @Param('id', ParseIntPipe) id: number, userId: number,
-    @Request() req
+    @Param('id', ParseIntPipe) id: number,
+    @Body('userId', ParseIntPipe) userId: number
   ) {
     return this.ticketService.addUserToTicket(id, userId);
   }
