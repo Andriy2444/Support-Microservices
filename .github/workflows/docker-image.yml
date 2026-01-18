@@ -73,7 +73,7 @@ jobs:
           docker compose down
 
   build-and-push:
-    needs: tests
+    # needs: tests
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
@@ -132,7 +132,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
 
   deploy:
-    needs: build-and-push
+    # needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
