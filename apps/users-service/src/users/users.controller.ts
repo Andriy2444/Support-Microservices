@@ -15,7 +15,7 @@ import {
   ExecutionContext
 } from '@nestjs/common';
 import { UserService } from './users.service';
-import { EventPattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { ApiOperation, ApiTags, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -78,6 +78,12 @@ export class UserController {
     } catch (error) {
       console.error('Error creating user from event:', error.message);
     }
+  }
+
+  @MessagePattern('auth.user.getRole')
+  async handleGetRole(@Payload() data: { authUserId: number }) {
+    console.log('RabbitMQ Request: Getting role for authUserId:', data.authUserId);
+    return await this.userService.getRole(data);
   }
 
   @Get('profile')

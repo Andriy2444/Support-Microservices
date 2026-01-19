@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from './mail.service';
 import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -64,27 +65,29 @@ async register(email: string, password: string) {
 
   // ================= LOGIN =================
   async login(email: string, password: string) {
-    const user = await this.prisma.auth.findUnique({
-      where: { email },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    const user = await this.prisma.auth.findUnique({ where: { email } });
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!match) throw new UnauthorizedException('Invalid credentials');
 
-    if (!user.isVerified) {
-      throw new UnauthorizedException('Email not verified');
+    if (!user.isVerified) throw new UnauthorizedException('Email not verified');
+
+    let role = 'USER';
+    try {
+      role = await firstValueFrom(
+        this.userClient.send<string>('auth.user.getRole', { authUserId: user.id }),
+      );
+      if (!role) role = 'USER';
+    } catch (err) {
+      console.error('Error getting user role from Users-service:', err);
     }
 
     const accessToken = this.jwt.sign(
       {
         sub: user.id,
         email: user.email,
+        role,
         type: 'access',
       },
       { expiresIn: '1h' },

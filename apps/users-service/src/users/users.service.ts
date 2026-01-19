@@ -7,6 +7,19 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getRole(data: { authUserId: number }) {
+    console.log('UserService: Searching role for authUserId:', data.authUserId);
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        authUserId: Number(data.authUserId)
+      },
+    });
+
+    console.log('UserService: Found user:', user);
+    return user?.role || null;
+  }
+
   async findAll() {
     return this.prisma.user.findMany({
       select: {
