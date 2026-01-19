@@ -1,10 +1,10 @@
-import { 
-  Controller, 
-  Get, 
-  Patch, 
-  Post, 
-  Body, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Param,
   UseGuards,
   Request,
   ParseIntPipe,
@@ -12,11 +12,17 @@ import {
   SetMetadata,
   Injectable,
   CanActivate,
-  ExecutionContext
+  ExecutionContext,
 } from '@nestjs/common';
 import { UserService } from './users.service';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
-import { ApiOperation, ApiTags, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiTags,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRole } from '../generated/client';
@@ -31,26 +37,26 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredRoles) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
-    
+
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
     const hasRole = requiredRoles.some((role) => user.role === role);
-    
+
     if (!hasRole) {
       throw new ForbiddenException(
-        `Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`
+        `Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
       );
     }
 
@@ -65,7 +71,9 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @EventPattern('auth.user.created')
-  async handleUserCreated(@Payload() data: { authUserId: number; email: string }) {
+  async handleUserCreated(
+    @Payload() data: { authUserId: number; email: string },
+  ) {
     console.log('RabbitMQ Event: Creating user profile for', data.email);
 
     try {

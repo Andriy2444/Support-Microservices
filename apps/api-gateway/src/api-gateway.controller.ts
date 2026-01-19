@@ -6,19 +6,19 @@ import * as proxy from 'express-http-proxy';
 export class ApiGatewayController {
   @All('auth/*path')
   handleAuth(@Req() req: Request, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return proxy('http://localhost:3001')(req, res);
   }
 
   @All('users/*path')
   handleUsers(@Req() req: Request, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return proxy('http://localhost:3002')(req, res);
   }
 
   @All('tickets/*path')
   handleTickets(@Req() req: Request, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return proxy('http://localhost:3003')(req, res);
   }
 }

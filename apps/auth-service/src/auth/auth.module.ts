@@ -6,7 +6,6 @@ import { AuthController } from './auth.controller';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from './mail.service';
 
-
 @Module({
   imports: [
     JwtModule.register({

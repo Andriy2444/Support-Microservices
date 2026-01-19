@@ -12,7 +12,7 @@ export class AppController {
     return {
       status: 'ok',
       service: 'tickets-service',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
+
 @Module({
   imports: [
     JwtModule.register({
@@ -25,11 +26,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ]),
   ],
   controllers: [UserController],
-  providers: [
-    UserService,
-    JwtAuthGuard,
-    RolesGuard,
-  ],
+  providers: [UserService, JwtAuthGuard, RolesGuard],
   exports: [UserService],
 })
 export class UserModule {}
