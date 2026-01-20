@@ -3,6 +3,7 @@ import { TicketsService } from './tickets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
 import { UserRole } from '../generated/client';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 const mockPrismaService = {
   user: {
