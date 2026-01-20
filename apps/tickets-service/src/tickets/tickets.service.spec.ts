@@ -173,7 +173,7 @@ describe('TicketsService', () => {
       const msg = { id: 1, message: 'Hi' };
       mockPrismaService.message.findUnique.mockResolvedValue(msg);
       const result = await service.getMessageById(1);
-      expect(result).toEqual(msg);
+      expect(result!).toEqual(msg);
     });
   });
 });
