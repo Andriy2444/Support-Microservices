@@ -66,6 +66,7 @@ jobs:
           cd docker
           docker compose up -d --build
           sleep 25
+          docker compose exec -T ${{ matrix.service }} npx jest apps/${{ matrix.service }}
           docker compose exec -T ${{ matrix.service }} npm run test
 
       - name: Cleanup
