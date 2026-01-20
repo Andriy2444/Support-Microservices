@@ -31,8 +31,12 @@ jobs:
         run: npm run lint -- --ignore-pattern '**/generated/**'
 
   tests:
-    # needs: lint
+    needs: lint
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [auth-service, users-service, tickets-service]
     steps:
       - uses: actions/checkout@v4
 
@@ -62,9 +66,7 @@ jobs:
           cd docker
           docker compose up -d --build
           sleep 15
-          docker compose exec -T tickets-service npm run test
-          # docker compose exec -T auth-service npm run test
-          # docker compose exec -T users-service npm run test
+          docker compose exec -T ${{ matrix.service }} npm run test
 
       - name: Cleanup
         if: always()
