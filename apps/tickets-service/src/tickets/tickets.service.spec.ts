@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from './tickets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { UserRole } from '../generated/client';
 
 const mockPrismaService = {
   user: {
@@ -43,7 +44,7 @@ describe('TicketsService', () => {
       const userId = 999;
       mockPrismaService.ticket.findMany.mockResolvedValue([{ id: 101 }]);
 
-      const result = await service.getTickets(userId, 'USER' as any);
+      const result = await service.getTickets(userId, UserRole.USER);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: { users: { some: { userId } } },
@@ -56,7 +57,7 @@ describe('TicketsService', () => {
       const userId = 2;
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
-      await service.getTickets(userId, 'SUPPORT' as any);
+      await service.getTickets(userId, UserRole.SUPPORT);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: {
@@ -75,7 +76,7 @@ describe('TicketsService', () => {
     });
 
     it('should return all tickets for ADMIN role', async () => {
-      await service.getTickets(1, 'ADMIN' as any);
+      await service.getTickets(1, UserRole.ADMIN);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: {},

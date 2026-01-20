@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, UserRole } from '../generated/client';
@@ -16,14 +15,15 @@ export class TicketsService {
     });
   }
 
-  async getTickets(userId: number, role: string) {
+  async getTickets(userId: number, role: UserRole) {
     let whereClause: Prisma.TicketWhereInput = {};
 
     switch (role) {
-      case 'USER':
+      case UserRole.USER:
         whereClause = { users: { some: { userId } } };
         break;
-      case 'SUPPORT':
+
+      case UserRole.SUPPORT:
         whereClause = {
           OR: [
             { status: 'OPEN' },
@@ -36,8 +36,9 @@ export class TicketsService {
           ],
         };
         break;
-      case 'ADMIN':
-        whereClause = {}; // бачить усі тікети
+
+      case UserRole.ADMIN:
+        whereClause = {};
         break;
     }
 
@@ -118,7 +119,9 @@ export class TicketsService {
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
     });
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
     return message;
   }
 }
