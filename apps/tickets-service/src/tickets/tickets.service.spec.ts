@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from './tickets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { UserRole } from '../generated/client';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 const mockPrismaService = {
   user: {
@@ -43,7 +45,7 @@ describe('TicketsService', () => {
       const userId = 999;
       mockPrismaService.ticket.findMany.mockResolvedValue([{ id: 101 }]);
 
-      const result = await service.getTickets(userId, 'USER' as any);
+      const result = await service.getTickets(userId, UserRole.USER);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: { users: { some: { userId } } },
@@ -56,7 +58,7 @@ describe('TicketsService', () => {
       const userId = 2;
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
-      await service.getTickets(userId, 'SUPPORT' as any);
+      await service.getTickets(userId, UserRole.SUPPORT);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: {
@@ -75,7 +77,7 @@ describe('TicketsService', () => {
     });
 
     it('should return all tickets for ADMIN role', async () => {
-      await service.getTickets(1, 'ADMIN' as any);
+      await service.getTickets(1, UserRole.ADMIN);
 
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith({
         where: {},
@@ -171,7 +173,7 @@ describe('TicketsService', () => {
       const msg = { id: 1, message: 'Hi' };
       mockPrismaService.message.findUnique.mockResolvedValue(msg);
       const result = await service.getMessageById(1);
-      expect(result).toEqual(msg);
+      expect(result!).toEqual(msg);
     });
   });
 });
