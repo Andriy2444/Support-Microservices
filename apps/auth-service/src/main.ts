@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,16 +14,17 @@ async function bootstrap() {
     .addServer('/auth')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
 
   app.getHttpAdapter().get('/docs-json', (req, res) => {
     res.json(document);
   });
 
+  SwaggerModule.setup('docs', app, document);
+
   await app.listen(port);
   console.log(
-    `🚀🤤🤫 Service Auth running on 👉 http://localhost:${port} 👈 🤫🤤🚀`,
+    `🚀 Auth Service running at http://localhost:${port}/docs`
   );
 }
 

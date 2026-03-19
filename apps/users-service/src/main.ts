@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,30 +13,31 @@ async function bootstrap() {
     options: {
       urls: [process.env.RABBITMQ_URL || 'amqp://rabbitmq:5672'],
       queue: 'users.events',
-      queueOptions: {
-        durable: true,
-      },
+      queueOptions: { durable: true },
     },
   });
 
   const config = new DocumentBuilder()
-    .setTitle('User Service API')
+    .setTitle('Users Service API')
     .setDescription('API для управління користувачами')
     .setVersion('1.0')
     .addBearerAuth()
     .addServer('/users')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
 
   app.getHttpAdapter().get('/docs-json', (req, res) => {
     res.json(document);
   });
 
+  SwaggerModule.setup('api-docs', app, document);
+
   await app.startAllMicroservices();
   await app.listen(port);
-  console.log(`🚀 Service User running on 👉 http://localhost:${port} 👈`);
+
+  console.log(`🚀 Users Service running at http://localhost:${port}/api-docs`);
   console.log(`🩺 Health check: http://localhost:${port}/health`);
 }
+
 bootstrap();

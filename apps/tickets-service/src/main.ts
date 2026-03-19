@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -8,23 +8,24 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
 
   const config = new DocumentBuilder()
-    .setTitle('Ticket Service')
+    .setTitle('Tickets Service')
     .setVersion('1.0.0')
     .setBasePath('tickets')
     .addBearerAuth()
     .addServer('/tickets')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
 
   app.getHttpAdapter().get('/docs-json', (req, res) => {
     res.json(document);
   });
 
+  SwaggerModule.setup('docs', app, document);
+
   await app.listen(port);
   console.log(
-    `🚀🤤🤫 Service Tickets running on 👉 http://localhost:${port} 👈 🤫🤤🚀`,
+    `🚀 Tickets Service running at http://localhost:${port}/docs`
   );
 }
 
