@@ -16,7 +16,7 @@ spec:
     http:
       paths:
       - path: /
-        pathType: ImplementationSpecific # Краще використовувати цей тип для Nginx
+        pathType: ImplementationSpecific
         backend:
           service:
             name: api-gateway-service
